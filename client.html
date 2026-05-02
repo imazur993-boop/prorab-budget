@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Живий кошторис</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F3EE;--surface:#fff;--s2:#F0EDE6;--border:#E2DDD4;--text:#1A1814;--t2:#6B6560;--t3:#9E9890;--accent:#D4541A;--al:#FDF0EB;--green:#2D6A2D;--gl:#EAF3EA;--red:#A32D2D;--rl:#FCEBEB;--navy:#1A2332;--amber:#B87A0A;--ambl:#FEF6E4;--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+.hdr{background:var(--navy);padding:14px 20px}
+.logo{font-size:17px;font-weight:700;color:#fff}.logo span{color:var(--accent)}
+.subtitle{font-size:12px;color:rgba(255,255,255,.45);margin-top:2px}
+.wrap{padding:16px;max-width:480px;margin:0 auto}
+.hero{background:var(--navy);border-radius:var(--r);padding:20px 16px;margin-bottom:12px}
+.hl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.ha{font-size:32px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+.hrow{display:flex;gap:16px}
+.hstat .l{font-size:11px;color:rgba(255,255,255,.4)}.hstat .v{font-size:14px;font-weight:600;color:rgba(255,255,255,.85)}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.ctitle{font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.sch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.scn{font-size:15px;font-weight:700}.scs{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.st-a{background:var(--ambl);color:var(--amber)}.st-d{background:var(--gl);color:var(--green)}
+.scbar{height:6px;background:var(--border);border-radius:3px;margin-bottom:6px;overflow:hidden}
+.scfill{height:100%;border-radius:3px}
+.fg{background:var(--green)}.fa{background:var(--amber)}.fr{background:var(--red)}
+.scnums{display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-bottom:10px}
+.scnums span{font-weight:600;color:var(--t2)}
+.db{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px}
+.do{background:var(--rl);color:var(--red)}.du{background:var(--gl);color:var(--green)}.dn{background:var(--s2);color:var(--t3)}
+.ci{background:var(--s2);border-radius:var(--rs);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cn{font-size:13px;font-weight:600}.cm{font-size:11px;color:var(--t3);margin-top:2px}
+.ca{font-size:14px;font-weight:700;text-align:right}.ccat{font-size:11px;color:var(--t3);text-align:right;margin-top:2px}
+.neg{color:var(--red)}.pos{color:var(--green)}.neu{color:var(--text)}
+.loading{text-align:center;padding:48px 20px;color:var(--t3)}
+.loading .ic{font-size:36px;margin-bottom:12px}
+.loading p{font-size:14px;line-height:1.6}
+.err{background:var(--rl);border:1px solid var(--red);border-radius:var(--r);padding:16px;margin-bottom:12px;color:var(--red);font-size:13px;line-height:1.6}
+.updated{font-size:11px;color:var(--t3);text-align:center;padding:12px 0}
+.refresh-btn{display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2);margin-bottom:12px}
+.confirm-badge{background:var(--gl);border:1px solid var(--green);border-radius:var(--r);padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.confirm-badge .ic{font-size:20px}.confirm-badge p{font-size:13px;color:var(--green);font-weight:500}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">Прораб<span>.</span>Бюджет</div>
+  <div class="subtitle" id="proj-title">Завантаження...</div>
+</div>
+
+<div class="wrap">
+  <div id="main-content">
+    <div class="loading">
+      <div class="ic">⏳</div>
+      <p>Завантажуємо дані...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+function fmt(v){return Math.round(v).toLocaleString('uk-UA');}
+
+var params=new URLSearchParams(window.location.search);
+var URL_SHEETS=params.get('url')||'';
+var PID=params.get('pid')||'';
+var PNAME=params.get('name')||'Об\'єкт';
+
+document.getElementById('proj-title').textContent=PNAME;
+document.title='Кошторис — '+PNAME;
+
+async function loadData(){
+  if(!URL_SHEETS||!PID){
+    document.getElementById('main-content').innerHTML='<div class="err">Невірне посилання. Зверніться до прораба.</div>';
+    return;
+  }
+  try{
+    var r=await fetch(URL_SHEETS+'?action=getData&pid='+encodeURIComponent(PID));
+    var data=await r.json();
+    render(data);
+  }catch(e){
+    document.getElementById('main-content').innerHTML='<div class="err">Не вдалось завантажити дані. Перевірте інтернет і спробуйте ще раз.</div><button class="refresh-btn" onclick="loadData()">Оновити</button>';
+  }
+}
+
+function render(data){
+  var stages=data.stages||[];
+  var expenses=data.expenses||[];
+
+  var totalBudget=stages.reduce((a,s)=>a+(parseFloat(s.budget)||0),0);
+  var totalSpent=expenses.reduce((a,e)=>a+(parseFloat(e.actual)||0),0);
+  var remain=totalBudget-totalSpent;
+
+  var html='';
+
+  html+='<div class="hero">';
+  html+='<div class="hl">Залишилось на об\'єкті</div>';
+  html+='<div class="ha">'+fmt(remain)+' ₴</div>';
+  html+='<div class="hrow">';
+  html+='<div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(totalBudget)+' ₴</div></div>';
+  html+='<div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(totalSpent)+' ₴</div></div>';
+  html+='</div></div>';
+
+  if(stages.length){
+    html+='<div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>';
+    stages.forEach(function(s){
+      var stageExp=expenses.filter(e=>e.stage===s.name);
+      var spent=stageExp.reduce((a,e)=>a+(parseFloat(e.actual)||0),0);
+      var budget=parseFloat(s.budget)||0;
+      var pct=budget>0?Math.min(100,Math.round(spent/budget*100)):0;
+      var left=budget-spent;
+      var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+      var sc=s.status==='closed'?'st-d':'st-a';
+      var sl=s.status==='closed'?'Закрито':'В роботі';
+      var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+      var exh=stageExp.slice(-5).reverse().map(function(e){
+        var d=parseFloat(e.delta)||0;
+        var dc=d>0?'neg':d<0?'pos':'neu';
+        var plan=parseFloat(e.planned)||0;
+        return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+(e.comment?' · '+e.comment:'')+'</div></div><div><div class="ca">'+fmt(parseFloat(e.actual))+'  ₴</div><div class="ccat '+dc+'">'+(plan?(d>0?'▲ +':d<0?'▼ ':'')+(d!==0?fmt(Math.abs(d))+' від плану':'за планом'):'')+'</div></div></div>';
+      }).join('');
+      html+='<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(budget)+' ₴</span> · Витрачено: <span>'+fmt(spent)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin-top:10px">'+exh+'</div>':'')+'</div>';
+    });
+  }else{
+    html+='<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px">Прораб ще не додав жодного етапу</div>';
+  }
+
+  html+='<button class="refresh-btn" onclick="loadData()">Оновити дані</button>';
+  html+='<div class="updated">Оновлено: '+new Date().toLocaleString('uk-UA')+'</div>';
+
+  document.getElementById('main-content').innerHTML=html;
+}
+
+loadData();
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>

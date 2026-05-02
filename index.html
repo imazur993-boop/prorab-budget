@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Прораб.Бюджет</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F3EE;--surface:#fff;--s2:#F0EDE6;--border:#E2DDD4;--text:#1A1814;--t2:#6B6560;--t3:#9E9890;--accent:#D4541A;--al:#FDF0EB;--ad:#A83F12;--green:#2D6A2D;--gl:#EAF3EA;--red:#A32D2D;--rl:#FCEBEB;--navy:#1A2332;--n2:#243042;--amber:#B87A0A;--ambl:#FEF6E4;--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+.hdr{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:17px;font-weight:700;color:#fff}.logo span{color:var(--accent)}
+.sync{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.s-ok{background:rgba(45,106,45,.3);color:#7FD47F}.s-err{background:rgba(163,45,45,.3);color:#F09595}.s-no{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.nav{background:var(--n2);display:flex;overflow-x:auto;scrollbar-width:none;padding:0}
+.nav::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:0;padding:11px 8px;font-size:12px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;border:none;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;background:transparent;font-family:'Manrope',sans-serif}
+.tab.on{color:#fff;border-bottom-color:var(--accent)}
+.scr{display:none}.scr.on{display:block}
+.wrap{padding:16px;max-width:480px;margin:0 auto;padding-bottom:24px}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.ctitle{font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.hero{background:var(--navy);border-radius:var(--r);padding:20px 16px;margin-bottom:12px}
+.hl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.ha{font-size:36px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+.hrow{display:flex;gap:16px}
+.hstat .l{font-size:11px;color:rgba(255,255,255,.4)}.hstat .v{font-size:14px;font-weight:600;color:rgba(255,255,255,.85)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--t2);margin-bottom:5px;font-weight:500}
+.irow{display:flex;align-items:center;gap:8px}
+.irow input,.irow select{flex:1;height:46px;border:1px solid var(--border);border-radius:var(--rs);padding:0 12px;font-size:15px;font-family:'Manrope',sans-serif;font-weight:500;color:var(--text);background:var(--surface);-webkit-appearance:none;appearance:none}
+.irow input:focus,.irow select:focus{outline:none;border-color:var(--accent)}
+.unit{font-size:13px;color:var(--t3);min-width:28px;font-weight:500}
+select{background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%236B6560' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:15px;font-family:'Manrope',sans-serif;color:var(--text);background:var(--surface);resize:none}
+textarea:focus{outline:none;border-color:var(--accent)}
+.btn{display:block;width:100%;height:50px;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;border:none;transition:all .15s;text-align:center;line-height:50px}
+.btn:active{transform:scale(.98)}
+.ba{background:var(--accent);color:#fff;margin-bottom:8px}
+.bn{background:var(--navy);color:#fff;margin-bottom:8px}
+.bo{background:transparent;border:1px solid var(--border);color:var(--t2)}
+.bg{background:var(--green);color:#fff;margin-bottom:8px}
+.bsm{height:38px;line-height:38px;font-size:13px;border-radius:var(--rs)}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.sch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.scn{font-size:15px;font-weight:700;color:var(--text)}
+.scs{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.st-a{background:var(--ambl);color:var(--amber)}.st-d{background:var(--gl);color:var(--green)}.st-p{background:var(--s2);color:var(--t3)}
+.scbar{height:6px;background:var(--border);border-radius:3px;margin-bottom:6px;overflow:hidden}
+.scfill{height:100%;border-radius:3px;transition:width .4s}
+.fg{background:var(--green)}.fa{background:var(--amber)}.fr{background:var(--red)}
+.scnums{display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-bottom:10px}
+.scnums span{font-weight:600;color:var(--t2)}
+.scact{display:flex;gap:6px}
+.sab{flex:1;height:34px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;font-family:'Manrope',sans-serif;color:var(--t2);cursor:pointer}
+.sab.pa{background:var(--accent);color:#fff;border-color:var(--accent)}.sab.pg{background:var(--green);color:#fff;border-color:var(--green)}
+.ci{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cn{font-size:14px;font-weight:600;color:var(--text)}.cm{font-size:11px;color:var(--t3);margin-top:2px}
+.cr{text-align:right}.ca{font-size:15px;font-weight:700}.ccat{font-size:11px;color:var(--t3);margin-top:2px}
+.neg{color:var(--red)}.pos{color:var(--green)}.neu{color:var(--text)}
+.db{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px}
+.do{background:var(--rl);color:var(--red)}.du{background:var(--gl);color:var(--green)}.dn{background:var(--s2);color:var(--t3)}
+.appr{background:var(--ambl);border:1.5px solid var(--amber);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.at{font-size:14px;font-weight:700;color:var(--amber)}.atx{font-size:12px;color:var(--amber);opacity:.85;margin-bottom:10px;line-height:1.5;margin-top:4px}
+.slink{background:var(--s2);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--t2);word-break:break-all;border:1px solid var(--border);margin-bottom:8px;font-family:monospace}
+.empty{text-align:center;padding:32px 20px;color:var(--t3)}
+.empty .ic{font-size:36px;margin-bottom:8px}.empty p{font-size:13px;line-height:1.6}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.rc{background:var(--s2);border-radius:var(--rs);padding:10px 12px}
+.rl2{font-size:11px;color:var(--t3);margin-bottom:3px;font-weight:500}.rv{font-size:18px;font-weight:700;color:var(--text)}.ru{font-size:11px;color:var(--t2)}
+.tc{background:var(--navy);border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tl{font-size:13px;color:rgba(255,255,255,.6);font-weight:500}.tv{font-size:22px;font-weight:700;color:#fff}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.tbtn{border:1px solid var(--border);border-radius:var(--rs);padding:10px 8px;font-size:13px;font-weight:500;color:var(--t2);background:var(--surface);cursor:pointer;text-align:center;font-family:'Manrope',sans-serif}
+.tbtn.on{border-color:var(--accent);color:var(--accent);background:var(--al)}
+.hint{font-size:11px;color:var(--t3);text-align:center;margin-bottom:14px;line-height:1.5}
+.mo{display:none;position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:200;align-items:flex-end;justify-content:center}
+.mo.on{display:flex}
+.mdl{background:var(--surface);border-radius:var(--r) var(--r) 0 0;padding:20px 20px 36px;width:100%;max-width:480px}
+.mh{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.mt{font-size:18px;font-weight:700;margin-bottom:16px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;font-weight:500;z-index:1000;transition:transform .3s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.divhr{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:12px;color:var(--t3)}
+.divhr::before,.divhr::after{content:'';flex:1;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">Прораб<span>.</span>Бюджет</div>
+  <div class="sync s-no" id="sync-el">● офлайн</div>
+</div>
+<div class="nav">
+  <button class="tab on" onclick="go('project')">Проєкт</button>
+  <button class="tab" onclick="go('expense')">+ Витрата</button>
+  <button class="tab" onclick="go('calc')">Калькулятор</button>
+  <button class="tab" onclick="go('settings')">Налаштування</button>
+</div>
+
+<!-- ПРОЄКТ -->
+<div id="scr-project" class="scr on">
+<div class="wrap">
+  <div class="hero">
+    <div class="hl">Залишилось на об'єкті</div>
+    <div class="ha" id="h-rem">0 ₴</div>
+    <div class="hrow">
+      <div class="hstat"><div class="l">Бюджет</div><div class="v" id="h-bud">0 ₴</div></div>
+      <div class="hstat"><div class="l">Витрачено</div><div class="v" id="h-spe">0 ₴</div></div>
+      <div class="hstat"><div class="l">Сьогодні</div><div class="v" id="h-tod">0 ₴</div></div>
+    </div>
+  </div>
+  <div id="appr-block" style="display:none">
+    <div class="appr">
+      <div class="at">⚡ Є зміни — замовник ще не бачив</div>
+      <div class="atx">Були зміни в кошторисі. Надішліть посилання замовнику щоб він підтвердив.</div>
+      <button class="btn bsm ba" style="width:auto;padding:0 16px" onclick="copyLink()">Надіслати замовнику</button>
+    </div>
+  </div>
+  <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>
+  <div id="stages-el"></div>
+  <button class="btn ba" onclick="openModal('m-stage')">+ Додати етап</button>
+  <button class="btn bo" onclick="copyLink()">Посилання для замовника</button>
+</div>
+</div>
+
+<!-- ВИТРАТА -->
+<div id="scr-expense" class="scr">
+<div class="wrap">
+
+  <div id="planned-items-block" style="display:none">
+    <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Заплановані позиції — натисніть щоб оплатити</div>
+    <div id="planned-items-list"></div>
+  </div>
+
+  <div class="card">
+    <div class="ctitle">Нова витрата</div>
+    <div class="field"><label>Що купили / оплатили</label><div class="irow"><input type="text" id="en" placeholder="Цемент М400, арматура, бригада..."></div></div>
+    <div class="field"><label>Планова сума (зі смети)</label><div class="irow"><input type="number" id="ep" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div></div>
+    <div class="field"><label>Фактична сума (реально заплатили)</label><div class="irow"><input type="number" id="ea" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div></div>
+    <div id="delta-bl" style="display:none;margin-bottom:12px">
+      <div class="db" id="delta-val"></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px" id="delta-txt"></div>
+    </div>
+    <div class="field"><label>Етап</label><div class="irow"><select id="es"><option value="">— Оберіть етап —</option></select></div></div>
+    <div class="field"><label>Категорія</label><div class="irow"><select id="ec"><option>Матеріали</option><option>Роботи</option><option>Транспорт</option><option>Обладнання</option><option>Інше</option></select></div></div>
+    <div class="field"><label>Коментар (необов'язково)</label><textarea id="ecm" rows="2" placeholder="Знайшли дешевше, ціна зросла..."></textarea></div>
+    <button class="btn ba" onclick="addExp()">Зафіксувати витрату</button>
+  </div>
+  <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Останні витрати</div>
+  <div id="exp-list"></div>
+</div>
+</div>
+
+<!-- КАЛЬКУЛЯТОР -->
+<div id="scr-calc" class="scr">
+<div class="wrap">
+  <div class="card">
+    <div class="ctitle">Тип фундаменту</div>
+    <div class="tgrid">
+      <button class="tbtn on" onclick="setCT('стрічковий',this)">Стрічковий</button>
+      <button class="tbtn" onclick="setCT('плитний',this)">Плитний</button>
+      <button class="tbtn" onclick="setCT('стовпчастий',this)">Стовпчастий</button>
+      <button class="tbtn" onclick="setCT('монолітний',this)">Монолітний</button>
+    </div>
+    <div class="ctitle">Параметри</div>
+    <div class="field"><label id="cpl">Периметр</label><div class="irow"><input type="number" id="cp" value="40" inputmode="decimal" oninput="runCalc()"><span class="unit">м</span></div></div>
+    <div class="field"><label>Глибина</label><div class="irow"><input type="number" id="cd" value="1.5" step="0.1" inputmode="decimal" oninput="runCalc()"><span class="unit">м</span></div></div>
+    <div class="field"><label id="cwl">Ширина стрічки</label><div class="irow"><input type="number" id="cw" value="0.4" step="0.05" inputmode="decimal" oninput="runCalc()"><span class="unit">м</span></div></div>
+    <div class="ctitle" style="margin-top:4px">Ціни на матеріали</div>
+    <div class="field"><label>Бетон / м³ (введіть свою ціну)</label><div class="irow"><input type="number" id="cpc" value="2800" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+    <div class="field"><label>Арматура / кг (введіть свою ціну)</label><div class="irow"><input type="number" id="cpa" value="28" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+    <div class="ctitle" style="margin-top:4px">Роботи</div>
+    <div class="field"><label>Вартість робіт (загальна сума)</label><div class="irow"><input type="number" id="cwork" value="0" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+    <div class="ctitle" style="margin-top:4px">Доставка</div>
+    <div class="field"><label>Вартість доставки</label><div class="irow"><input type="number" id="cdel" value="0" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+  </div>
+  <div class="rgrid">
+    <div class="rc"><div class="rl2">Бетон (+5%)</div><div class="rv" id="cr1">—</div><div class="ru">м³</div></div>
+    <div class="rc"><div class="rl2">Арматура</div><div class="rv" id="cr2">—</div><div class="ru">кг</div></div>
+    <div class="rc"><div class="rl2">Опалубка</div><div class="rv" id="cr3">—</div><div class="ru">м²</div></div>
+    <div class="rc"><div class="rl2">Об'єм</div><div class="rv" id="cr4">—</div><div class="ru">м³</div></div>
+  </div>
+  <div style="background:var(--navy);border-radius:var(--r);padding:14px 16px;margin-bottom:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:13px;color:rgba(255,255,255,.6)">Матеріали</div>
+      <div style="font-size:16px;font-weight:600;color:#fff" id="ctot-mat">—</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:13px;color:rgba(255,255,255,.6)">Роботи</div>
+      <div style="font-size:16px;font-weight:600;color:#fff" id="ctot-work">—</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:13px;color:rgba(255,255,255,.6)">Доставка</div>
+      <div style="font-size:16px;font-weight:600;color:#fff" id="ctot-del">—</div>
+    </div>
+    <div style="border-top:1px solid rgba(255,255,255,.15);padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:13px;color:rgba(255,255,255,.6)">Разом</div>
+      <div style="font-size:22px;font-weight:700;color:#fff" id="ctot">—</div>
+    </div>
+  </div>
+  <p class="hint">Ціни орієнтовні — змінюйте під свої реальні дані.</p>
+  <button class="btn ba" onclick="calcToStage()">Додати як бюджет етапу</button>
+</div>
+</div>
+
+<!-- НАЛАШТУВАННЯ -->
+<div id="scr-settings" class="scr">
+<div class="wrap">
+  <div class="card">
+    <div class="ctitle">Google Sheets підключення</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">Після підключення всі витрати автоматично зберігаються в таблицю, а замовник бачить зміни онлайн.</p>
+    <div class="field"><label>Apps Script URL</label><div class="irow"><input type="url" id="su" placeholder="https://script.google.com/macros/s/..." style="font-size:13px"></div></div>
+    <button class="btn bn bsm" onclick="saveUrl()">Зберегти і перевірити</button>
+    <div class="divhr">як отримати URL</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.9">
+      <b style="color:var(--text)">1.</b> Google Sheets → Розширення → Apps Script<br>
+      <b style="color:var(--text)">2.</b> Вставте код (кнопка нижче)<br>
+      <b style="color:var(--text)">3.</b> Розгорнути → Нове розгортання → Веб-застосунок<br>
+      <b style="color:var(--text)">4.</b> Доступ: Будь-хто → скопіюйте URL
+    </div>
+    <button class="btn bo bsm" style="margin-top:10px" onclick="copyScript()">Скопіювати код скрипту</button>
+  </div>
+  <div class="card">
+    <div class="ctitle">Проєкт</div>
+    <div class="field"><label>Назва об'єкта</label><div class="irow"><input type="text" id="pn" placeholder="Котедж Іваненка"></div></div>
+    <div class="field"><label>ID проєкту (латиницею, без пробілів)</label><div class="irow"><input type="text" id="pi" placeholder="ivanenko-2024" style="font-size:13px"></div></div>
+    <button class="btn bn bsm" onclick="saveProj()">Зберегти</button>
+  </div>
+  <div class="card">
+    <div class="ctitle">Посилання для замовника</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:10px;line-height:1.6">Замовник відкриє це посилання і побачить живу смету — всі зміни в реальному часі.</p>
+    <div class="slink" id="cl-display">Налаштуйте Apps Script URL і ID проєкту</div>
+    <button class="btn ba bsm" onclick="copyLink()">Скопіювати посилання</button>
+  </div>
+  <div class="card">
+    <div class="ctitle">Дані</div>
+    <button class="btn bo bsm" style="margin-bottom:8px" onclick="exportJ()">Вивантажити JSON</button>
+    <button class="btn bo bsm" style="color:var(--red);border-color:var(--red)" onclick="clearAll()">Очистити всі дані</button>
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="m-stage" onclick="closeModal('m-stage')">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt">Новий етап</div>
+    <div class="field"><label>Назва</label><div class="irow"><input type="text" id="mn" placeholder="Фундамент, Коробка, Дах..."></div></div>
+    <div class="field"><label>Бюджет від замовника</label><div class="irow"><input type="number" id="mb" placeholder="300000" inputmode="decimal"><span class="unit">₴</span></div></div>
+    <button class="btn ba" onclick="addStage()">Додати</button>
+    <button class="btn bo" onclick="closeModal('m-stage')">Скасувати</button>
+  </div>
+</div>
+
+<div class="mo" id="m-close" onclick="closeModal('m-close')">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt" id="mc-title">Закрити етап</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6;white-space:pre-line" id="mc-text"></p>
+    <button class="btn bg" onclick="doCloseStage()">Закрити і надіслати замовнику</button>
+    <button class="btn bo" onclick="closeModal('m-close')">Скасувати</button>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+<script>
+var SCRIPT_CODE = `function doGet(e){return handle(e)}
+function doPost(e){return handle(e)}
+function handle(e){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var act=(e.parameter&&e.parameter.action)||'ping';
+  var pid=(e.parameter&&e.parameter.pid)||'default';
+  var mime=ContentService.MimeType.JSON;
+  if(act==='ping') return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  if(act==='addExpense'){
+    var sh=getSheet(ss,pid+'_витрати');
+    var d=JSON.parse(e.postData.contents);
+    if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['Дата','Назва','Планова','Фактична','Різниця','Етап','Категорія','Коментар']);
+    sh.appendRow([d.date,d.name,d.planned,d.actual,d.actual-d.planned,d.stage,d.cat,d.comment||'']);
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='addStage'){
+    var sh=getSheet(ss,pid+'_етапи');
+    var d=JSON.parse(e.postData.contents);
+    if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['ID','Назва','Бюджет','Статус','Дата']);
+    sh.appendRow([d.id,d.name,d.budget,'active',new Date().toLocaleDateString('uk-UA')]);
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='closeStage'){
+    var sh=getSheet(ss,pid+'_етапи');
+    var d=JSON.parse(e.postData.contents);
+    var rows=sh.getDataRange().getValues();
+    for(var i=1;i<rows.length;i++){if(rows[i][0]==d.id){sh.getRange(i+1,4).setValue('closed');break;}}
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='getData'){
+    var es=getSheet(ss,pid+'_витрати');
+    var ss2=getSheet(ss,pid+'_етапи');
+    var exp=es.getLastRow()>1?es.getRange(2,1,es.getLastRow()-1,8).getValues():[];
+    var sta=ss2.getLastRow()>1?ss2.getRange(2,1,ss2.getLastRow()-1,5).getValues():[];
+    var res={
+      expenses:exp.map(function(r){return{date:r[0],name:r[1],planned:r[2],actual:r[3],delta:r[4],stage:r[5],cat:r[6],comment:r[7]}}),
+      stages:sta.map(function(r){return{id:r[0],name:r[1],budget:r[2],status:r[3]}})
+    };
+    return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(mime);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:false})).setMimeType(mime);
+}
+function getSheet(ss,name){var s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);return s;}`;
+
+// STATE
+var S={url:'',pid:'',pname:'',stages:[],expenses:[],pending:false};
+
+function load(){
+  try{var d=JSON.parse(localStorage.getItem('pb2')||'{}');Object.assign(S,d);}catch(e){}
+  if(document.getElementById('su')) document.getElementById('su').value=S.url||'';
+  if(document.getElementById('pn')) document.getElementById('pn').value=S.pname||'';
+  if(document.getElementById('pi')) document.getElementById('pi').value=S.pid||'';
+  updSync();updLink();
+}
+function save(){localStorage.setItem('pb2',JSON.stringify(S));}
+function fmt(v){return Math.round(v).toLocaleString('uk-UA');}
+function toast(msg,dur){var t=document.getElementById('toast-el');t.textContent=msg;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('on'),dur||2800);}
+
+function go(name){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('scr-'+name).classList.add('on');
+  var m={project:0,expense:1,calc:2,settings:3};
+  document.querySelectorAll('.tab')[m[name]].classList.add('on');
+  if(name==='project') renderProject();
+  if(name==='expense'){renderExpList();fillStageSelect();renderPlannedItems();}
+  if(name==='calc') runCalc();
+  window.scrollTo(0,0);
+}
+function openModal(id){document.getElementById(id).classList.add('on');}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+
+function updSync(){
+  var el=document.getElementById('sync-el');
+  el.className='sync '+(S.url?'s-ok':'s-no');
+  el.textContent=S.url?'● онлайн':'● офлайн';
+}
+function updLink(){
+  var el=document.getElementById('cl-display');
+  if(!el) return;
+  if(S.url&&S.pid){
+    var base=window.location.href.replace(/[^\/]*$/, '');
+    el.textContent=base+'index.html?url='+encodeURIComponent(S.url)+'&pid='+encodeURIComponent(S.pid)+'&name='+encodeURIComponent(S.pname||'');
+  }else{el.textContent='Налаштуйте Apps Script URL і ID проєкту';}
+}
+
+async function saveUrl(){
+  S.url=document.getElementById('su').value.trim();save();
+  if(!S.url){toast('Введіть URL');return;}
+  toast('Перевіряємо...',5000);
+  try{
+    var r=await fetch(S.url+'?action=ping');
+    var j=await r.json();
+    if(j.ok){toast('Підключено! ✓');updSync();}else{toast('Помилка відповіді');}
+  }catch(e){toast('Не вдалось підключитись');}
+}
+function saveProj(){
+  S.pname=document.getElementById('pn').value.trim();
+  S.pid=document.getElementById('pi').value.trim().toLowerCase().replace(/\s+/g,'-');
+  save();updLink();toast('Збережено!');
+}
+function copyLink(){
+  if(!S.url||!S.pid){toast('Спочатку налаштуйте підключення');go('settings');return;}
+  var base=window.location.href.replace(/[^\/]*$/, '');
+  var link=base+'index.html?url='+encodeURIComponent(S.url)+'&pid='+encodeURIComponent(S.pid)+'&name='+encodeURIComponent(S.pname||'');
+  navigator.clipboard.writeText(link).then(()=>toast('Посилання скопійовано!')).catch(()=>prompt('Посилання:',link));
+}
+function copyScript(){
+  navigator.clipboard.writeText(SCRIPT_CODE).then(()=>toast('Код скопійовано!')).catch(()=>prompt('Код:',SCRIPT_CODE));
+}
+
+async function sync(action,data){
+  if(!S.url) return false;
+  try{
+    var r=await fetch(S.url+'?action='+action+'&pid='+encodeURIComponent(S.pid||'default'),{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});
+    var j=await r.json();return j.ok;
+  }catch(e){return false;}
+}
+
+// STAGES
+async function addStage(){
+  var name=document.getElementById('mn').value.trim();
+  var budget=parseFloat(document.getElementById('mb').value)||0;
+  if(!name||!budget){toast('Заповніть назву і бюджет');return;}
+  var stage={id:Date.now(),name,budget,spent:0,status:'active'};
+  S.stages.push(stage);
+
+  // Якщо є планові позиції з калькулятора — додаємо їх як заплановані витрати
+  var items=window._calcItems||[];
+  var today=new Date().toLocaleDateString('uk-UA');
+  items.forEach(function(item){
+    S.plannedItems=S.plannedItems||[];
+    S.plannedItems.push({
+      id:String(Date.now()+Math.random()),
+      stageId:stage.id,
+      stageName:name,
+      name:item.name,
+      planned:item.planned,
+      cat:item.cat,
+      paid:false,
+      date:today
+    });
+  });
+  window._calcItems=[];
+
+  save();
+  closeModal('m-stage');
+  document.getElementById('mn').value='';document.getElementById('mb').value='';
+  renderProject();fillStageSelect();
+  if(items.length){
+    toast('Етап додано! '+items.length+' позицій готові до оплати.');
+  } else {
+    toast('Етап додано!');
+  }
+  sync('addStage',{id:stage.id,name:stage.name,budget:stage.budget});
+}
+
+var _closingId=null;
+function showCloseModal(id){
+  _closingId=id;
+  var s=S.stages.find(x=>x.id===id);if(!s) return;
+  var left=s.budget-s.spent;
+  document.getElementById('mc-title').textContent='Закрити «'+s.name+'»';
+  document.getElementById('mc-text').textContent='Бюджет: '+fmt(s.budget)+' ₴\nВитрачено: '+fmt(s.spent)+' ₴\n'+(left>=0?'Економія: '+fmt(left)+' ₴':'Перевитрата: '+fmt(Math.abs(left))+' ₴')+'\n\nЗамовник отримає фінальний звіт.';
+  openModal('m-close');
+}
+async function doCloseStage(){
+  if(!_closingId) return;
+  var s=S.stages.find(x=>x.id===_closingId);
+  if(s){s.status='closed';S.pending=true;}
+  save();closeModal('m-close');renderProject();
+  toast('Закрито. Надішліть посилання замовнику.');
+  sync('closeStage',{id:_closingId});
+  _closingId=null;
+}
+
+function renderProject(){
+  var tb=S.stages.reduce((a,s)=>a+s.budget,0);
+  var ts=S.stages.reduce((a,s)=>a+s.spent,0);
+  var today=new Date().toLocaleDateString('uk-UA');
+  var tod=S.expenses.filter(e=>e.date===today).reduce((a,e)=>a+e.actual,0);
+  document.getElementById('h-rem').textContent=fmt(tb-ts)+' ₴';
+  document.getElementById('h-bud').textContent=fmt(tb)+' ₴';
+  document.getElementById('h-spe').textContent=fmt(ts)+' ₴';
+  document.getElementById('h-tod').textContent=fmt(tod)+' ₴';
+  document.getElementById('appr-block').style.display=S.pending?'block':'none';
+  var el=document.getElementById('stages-el');
+  if(!S.stages.length){el.innerHTML='<div class="empty"><div class="ic">🏗️</div><p>Немає жодного етапу.<br>Додайте перший нижче.</p></div>';return;}
+  el.innerHTML=S.stages.map(function(s){
+    var pct=s.budget>0?Math.min(100,Math.round(s.spent/s.budget*100)):0;
+    var left=s.budget-s.spent;
+    var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+    var sc2=s.status==='closed'?'st-d':'st-a';
+    var sl=s.status==='closed'?'Закрито':'Активний';
+    var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ економія</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+    var exps=S.expenses.filter(e=>e.stageId===s.id).slice(-3).reverse();
+    var exh=exps.map(function(e){
+      var d=e.actual-e.planned;
+      var dc=d>0?'neg':d<0?'pos':'neu';
+      return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+(e.comment?' · '+e.comment:'')+'</div></div><div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'+':'')+fmt(d)+' ₴ від плану':'за планом')+'</div></div></div>';
+    }).join('');
+    var act=s.status==='closed'
+      ?'<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">Закрито · чекаємо підтвердження замовника</div>'
+      :'<div class="scact"><button class="sab pa" onclick="go(\'expense\')">+ Витрата</button><button class="sab pg" onclick="showCloseModal('+s.id+')">Закрити етап</button></div>';
+    return '<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(s.budget)+' ₴</span> · Витрачено: <span>'+fmt(s.spent)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin:10px 0">'+exh+'</div>':'')+act+'</div>';
+  }).join('');
+}
+
+// EXPENSES
+function fillStageSelect(){
+  var sel=document.getElementById('es');if(!sel) return;
+  sel.innerHTML='<option value="">— Оберіть етап —</option>'+S.stages.filter(s=>s.status==='active').map(s=>'<option value="'+s.id+'">'+s.name+'</option>').join('');
+}
+
+function renderPlannedItems(){
+  var items=(S.plannedItems||[]).filter(i=>!i.paid);
+  var block=document.getElementById('planned-items-block');
+  var list=document.getElementById('planned-items-list');
+  if(!block||!list) return;
+  if(!items.length){block.style.display='none';return;}
+  block.style.display='block';
+  list.innerHTML=items.map(function(item){
+    return '<div class="ci" style="margin-bottom:6px;border:1.5px solid var(--accent);cursor:pointer" onclick="prefillExpense(\''+item.id+'\')">' +
+      '<div><div class="cn">'+item.name+'</div><div class="cm">'+item.stageName+' · '+item.cat+'</div></div>' +
+      '<div class="cr"><div class="ca" style="color:var(--accent)">'+fmt(item.planned)+' ₴</div><div class="ccat">план · натисніть оплатити</div></div>' +
+      '</div>';
+  }).join('');
+}
+
+function prefillExpense(itemId){
+  var item=(S.plannedItems||[]).find(function(i){return String(i.id)===String(itemId);});
+  if(!item) return;
+  document.getElementById('en').value=item.name;
+  document.getElementById('ep').value=item.planned;
+  document.getElementById('ea').value='';
+  var sel=document.getElementById('es');
+  if(sel){
+    sel.value=item.stageId;
+    if(!sel.value) {
+      for(var i=0;i<sel.options.length;i++){
+        if(sel.options[i].text===item.stageName){sel.selectedIndex=i;break;}
+      }
+    }
+  }
+  var catSel=document.getElementById('ec');
+  if(catSel) catSel.value=item.cat;
+  window._prefillItemId=itemId;
+  document.getElementById('ep').dispatchEvent(new Event('input'));
+  document.getElementById('ea').focus();
+  document.querySelector('.card').scrollIntoView({behavior:'smooth'});
+  toast('Введіть фактичну суму ↓');
+}
+
+document.addEventListener('input',function(e){
+  if(e.target.id==='ep'||e.target.id==='ea'){
+    var p=parseFloat(document.getElementById('ep').value)||0;
+    var a=parseFloat(document.getElementById('ea').value)||0;
+    if(p&&a){
+      var d=a-p;var bl=document.getElementById('delta-bl');var bv=document.getElementById('delta-val');var bt=document.getElementById('delta-txt');
+      bl.style.display='block';
+      if(d>0){bv.className='db do';bv.textContent='▲ +'+fmt(d)+' ₴ дорожче ніж план';bt.textContent='Замовник побачить різницю і коментар';}
+      else if(d<0){bv.className='db du';bv.textContent='▼ '+fmt(d)+' ₴ дешевше ніж план';bt.textContent='Економія — замовник також побачить';}
+      else{bv.className='db dn';bv.textContent='✓ Точно за планом';bt.textContent='';}
+    }
+  }
+});
+
+async function addExp(){
+  var name=document.getElementById('en').value.trim();
+  var planned=parseFloat(document.getElementById('ep').value)||0;
+  var actual=parseFloat(document.getElementById('ea').value)||0;
+  var sid=parseInt(document.getElementById('es').value);
+  var cat=document.getElementById('ec').value;
+  var comment=document.getElementById('ecm').value.trim();
+  if(!name){toast('Введіть назву');return;}
+  if(!actual){toast('Введіть фактичну суму');return;}
+  if(!sid){toast('Оберіть етап');return;}
+  var exp={id:Date.now(),name,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta:actual-planned};
+  S.expenses.push(exp);
+  var stage=S.stages.find(s=>s.id===sid);
+  if(stage) stage.spent+=actual;
+  if(Math.abs(exp.delta)>0) S.pending=true;
+  save();
+  // Відмічаємо планову позицію як оплачену
+  if(window._prefillItemId){
+    var pi=(S.plannedItems||[]).find(function(i){return String(i.id)===String(window._prefillItemId);});
+    if(pi) pi.paid=true;
+    window._prefillItemId=null;
+    save();
+  }
+  document.getElementById('en').value='';document.getElementById('ep').value='';document.getElementById('ea').value='';document.getElementById('ecm').value='';
+  document.getElementById('delta-bl').style.display='none';
+  renderExpList();renderPlannedItems();toast('Зафіксовано!');
+  var ok=await sync('addExpense',{date:exp.date,name:exp.name,planned:exp.planned,actual:exp.actual,stage:stage?stage.name:'',cat:exp.cat,comment:exp.comment});
+  if(ok) toast('Синхронізовано з Google Sheets ✓');
+}
+
+function renderExpList(){
+  var el=document.getElementById('exp-list');if(!el) return;
+  if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.</p></div>';return;}
+  el.innerHTML=[...S.expenses].reverse().slice(0,20).map(function(e){
+    var s=S.stages.find(x=>x.id===e.stageId);
+    var d=e.delta||0;var dc=d>0?'neg':d<0?'pos':'neu';
+    return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div><div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'+':'')+fmt(d)+' від плану':'за планом')+'</div></div></div>';
+  }).join('');
+}
+
+// CALC
+var ct='стрічковий';
+function setCT(t,el){ct=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));el.classList.add('on');document.getElementById('cwl').textContent=t==='плитний'?'Товщина плити':t==='стовпчастий'?'Діаметр стовпа':'Ширина стрічки';document.getElementById('cpl').textContent=t==='стовпчастий'?'Кількість стовпів':t==='плитний'?'Сторона плити':'Периметр';runCalc();}
+function nc(id){return parseFloat(document.getElementById(id).value)||0;}
+function runCalc(){
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
+  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp=v*1.05,arm=v*100,form=p*d*2,mat=vp*pc+arm*pa,tot=mat+work+del;
+  document.getElementById('cr1').textContent=vp.toFixed(1);
+  document.getElementById('cr2').textContent=fmt(arm);
+  document.getElementById('cr3').textContent=form.toFixed(1);
+  document.getElementById('cr4').textContent=v.toFixed(1);
+  document.getElementById('ctot-mat').textContent=fmt(mat)+' ₴';
+  document.getElementById('ctot-work').textContent=fmt(work)+' ₴';
+  document.getElementById('ctot-del').textContent=fmt(del)+' ₴';
+  document.getElementById('ctot').textContent=fmt(tot)+' ₴';
+  window._ctot=Math.round(tot);
+}
+function calcToStage(){
+  if(!window._ctot) return;
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
+  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp=v*1.05,arm=v*100,mat=vp*pc+arm*pa;
+
+  // Зберігаємо планові позиції для подальшого використання
+  window._calcItems=[];
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc2=nc('cpc'),pa2=nc('cpa'),work2=nc('cwork'),del2=nc('cdel');
+  var v2=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp2=v2*1.05,arm2=v2*100;
+  var costConcrete=Math.round(vp2*pc2);
+  var costArm=Math.round(arm2*pa2);
+  if(costConcrete>0) window._calcItems.push({name:'Бетон '+vp2.toFixed(1)+' м³',planned:costConcrete,cat:'Матеріали'});
+  if(costArm>0) window._calcItems.push({name:'Арматура '+Math.round(arm2)+' кг',planned:costArm,cat:'Матеріали'});
+  if(work2>0) window._calcItems.push({name:'Роботи',planned:Math.round(work2),cat:'Роботи'});
+  if(del2>0) window._calcItems.push({name:'Доставка',planned:Math.round(del2),cat:'Транспорт'});
+
+  document.getElementById('mb').value=window._ctot;
+  document.getElementById('mn').value='Фундамент ('+ct+')';
+  openModal('m-stage');
+}
+
+function exportJ(){
+  var b=new Blob([JSON.stringify({date:new Date().toISOString(),project:S.pname,stages:S.stages,expenses:S.expenses},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='prorab-'+(S.pid||'export')+'-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function clearAll(){if(!confirm('Видалити дані проєкту? Налаштування підключення збережуться.')) return;S.stages=[];S.expenses=[];S.plannedItems=[];S.pending=false;save();renderProject();toast('Дані проєкту видалено. Налаштування збережені.');}
+
+load();renderProject();runCalc();
+
+// Якщо відкрито як сторінка замовника — показуємо клієнтський вид
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var clientUrl=params.get('url');
+  var clientPid=params.get('pid');
+  var clientName=params.get('name');
+  if(clientUrl&&clientPid){
+    document.querySelector('.hdr').innerHTML='<div class="logo">Прораб<span>.</span>Бюджет</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px" id="proj-title">Завантаження...</div>';
+    document.querySelector('.nav').style.display='none';
+    document.querySelectorAll('.scr').forEach(s=>s.style.display='none');
+    var wrap=document.createElement('div');
+    wrap.className='wrap';
+    wrap.id='client-wrap';
+    wrap.innerHTML='<div id="client-content"><div style="text-align:center;padding:48px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:12px">⏳</div><p style="font-size:14px">Завантажуємо дані...</p></div></div>';
+    document.body.appendChild(wrap);
+    if(clientName) document.getElementById('proj-title').textContent=decodeURIComponent(clientName);
+    document.title='Кошторис — '+(clientName?decodeURIComponent(clientName):'Об\'єкт');
+    function loadClientData(){
+      fetch(clientUrl+'?action=getData&pid='+encodeURIComponent(clientPid))
+        .then(function(r){return r.json();})
+        .then(function(data){renderClient(data);})
+        .catch(function(){
+          document.getElementById('client-content').innerHTML='<div style="background:var(--rl);border:1px solid var(--red);border-radius:var(--r);padding:16px;color:var(--red);font-size:13px;line-height:1.6;margin-bottom:12px">Не вдалось завантажити дані. Перевірте інтернет.</div><button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2)">Оновити</button>';
+        });
+    }
+    window.loadClientData=loadClientData;
+    function renderClient(data){
+      var stages=data.stages||[];
+      var expenses=data.expenses||[];
+      var tb=stages.reduce(function(a,s){return a+(parseFloat(s.budget)||0);},0);
+      var ts=expenses.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+      var html='<div class="hero"><div class="hl">Залишилось на об\'єкті</div><div class="ha">'+fmt(tb-ts)+' ₴</div><div class="hrow"><div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(tb)+' ₴</div></div><div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(ts)+' ₴</div></div></div></div>';
+      if(stages.length){
+        html+='<div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>';
+        stages.forEach(function(s){
+          var se=expenses.filter(function(e){return e.stage===s.name;});
+          var sp=se.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+          var bud=parseFloat(s.budget)||0;
+          var pct=bud>0?Math.min(100,Math.round(sp/bud*100)):0;
+          var left=bud-sp;
+          var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+          var sc2=s.status==='closed'?'st-d':'st-a';
+          var sl=s.status==='closed'?'Закрито':'В роботі';
+          var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+          var exh=se.slice(-5).reverse().map(function(e){
+            var d=parseFloat(e.delta)||0;var dc=d>0?'neg':d<0?'pos':'neu';
+            return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+(e.comment?' · '+e.comment:'')+'</div></div><div><div class="ca">'+fmt(parseFloat(e.actual))+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div></div></div>';
+          }).join('');
+          html+='<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(bud)+' ₴</span> · Витрачено: <span>'+fmt(sp)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin-top:10px">'+exh+'</div>':'')+'</div>';
+        });
+      }else{
+        html+='<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px">Прораб ще не додав жодного етапу</div>';
+      }
+      html+='<button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2);margin-bottom:12px">Оновити дані</button>';
+      html+='<div style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0">Оновлено: '+new Date().toLocaleString('uk-UA')+'</div>';
+      document.getElementById('client-content').innerHTML=html;
+    }
+    loadClientData();
+    setInterval(loadClientData,60000);
+  }
+})();
+
+</script>
+</body>
+</html>
