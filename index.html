@@ -15,7 +15,7 @@ body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min
 .s-ok{background:rgba(45,106,45,.3);color:#7FD47F}.s-err{background:rgba(163,45,45,.3);color:#F09595}.s-no{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
 .nav{background:var(--n2);display:flex;overflow-x:auto;scrollbar-width:none;padding:0}
 .nav::-webkit-scrollbar{display:none}
-.tab{flex:1;min-width:0;padding:11px 8px;font-size:12px;font-weight:500;color:rgba(255,255,255,.45);cursor:pointer;border:none;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;background:transparent;font-family:'Manrope',sans-serif}
+.tab{flex:1;min-width:0;padding:13px 6px;font-size:14px;font-weight:600;color:rgba(255,255,255,.45);cursor:pointer;border:none;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;background:transparent;font-family:'Manrope',sans-serif}
 .tab.on{color:#fff;border-bottom-color:var(--accent)}
 .scr{display:none}.scr.on{display:block}
 .wrap{padding:16px;max-width:480px;margin:0 auto;padding-bottom:24px}
@@ -88,6 +88,102 @@ textarea:focus{outline:none;border-color:var(--accent)}
 </head>
 <body>
 
+<!-- ОНБОРДИНГ — показується тільки вперше -->
+<div id="onboarding" style="display:none;min-height:100vh;background:var(--bg)">
+  <div style="background:var(--navy);padding:20px 20px 24px">
+    <div class="logo">Прораб<span>.</span>Бюджет</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:4px">Швидкий розрахунок і контроль бюджету</div>
+  </div>
+
+  <!-- КРОК 1: Що будуємо -->
+  <div id="ob-step1" style="padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">Що будуємо?</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Оберіть тип об'єкта</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
+      <div onclick="selectType('Котедж')" class="ob-type-btn" id="type-Котедж">
+        <div style="font-size:28px;margin-bottom:6px">🏠</div>
+        <div style="font-weight:600;font-size:14px">Котедж</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Приватний будинок</div>
+      </div>
+      <div onclick="selectType('Таунхаус')" class="ob-type-btn" id="type-Таунхаус">
+        <div style="font-size:28px;margin-bottom:6px">🏘️</div>
+        <div style="font-weight:600;font-size:14px">Таунхаус</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Зблокований будинок</div>
+      </div>
+      <div onclick="selectType('Комерційне')" class="ob-type-btn" id="type-Комерційне">
+        <div style="font-size:28px;margin-bottom:6px">🏢</div>
+        <div style="font-weight:600;font-size:14px">Комерційне</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Офіс, магазин</div>
+      </div>
+      <div onclick="selectType('Прибудова')" class="ob-type-btn" id="type-Прибудова">
+        <div style="font-size:28px;margin-bottom:6px">🔧</div>
+        <div style="font-weight:600;font-size:14px">Прибудова</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Реконструкція</div>
+      </div>
+    </div>
+    <button class="btn ba" id="ob-next1" onclick="obStep2()" style="opacity:.4;pointer-events:none">Далі →</button>
+  </div>
+
+  <!-- КРОК 2: Параметри -->
+  <div id="ob-step2" style="display:none;padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">Параметри об'єкта</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Три цифри — і ви отримаєте орієнтовний бюджет</div>
+
+    <div class="field">
+      <label>Площа будинку</label>
+      <div class="irow"><input type="number" id="ob-area" placeholder="150" inputmode="decimal" oninput="obCheckStep2()"><span class="unit">м²</span></div>
+    </div>
+
+    <div class="field">
+      <label>Кількість поверхів</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px">
+        <div onclick="selectFloors(1,this)" class="ob-floor-btn">1</div>
+        <div onclick="selectFloors(2,this)" class="ob-floor-btn">2</div>
+        <div onclick="selectFloors(3,this)" class="ob-floor-btn">3</div>
+        <div onclick="selectFloors(0,this)" class="ob-floor-btn" style="font-size:11px">1+мансарда</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:12px">
+      <label>Тип стін</label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+        <div onclick="selectWall('Газоблок',this)" class="ob-wall-btn">🧱 Газоблок / піноблок</div>
+        <div onclick="selectWall('Цегла',this)" class="ob-wall-btn">🔴 Цегла</div>
+        <div onclick="selectWall('Каркас',this)" class="ob-wall-btn">🪵 Каркасний будинок</div>
+        <div onclick="selectWall('Монолітний',this)" class="ob-wall-btn">🏗️ Монолітний залізобетон</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn bo" onclick="obStep1()" style="flex:1">← Назад</button>
+      <button class="btn ba" id="ob-next2" onclick="obCalculate()" style="flex:2;opacity:.4;pointer-events:none">Розрахувати →</button>
+    </div>
+  </div>
+
+  <!-- КРОК 3: Результат -->
+  <div id="ob-step3" style="display:none;padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">Орієнтовний бюджет</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="ob-obj-label">Котедж · 150 м² · 2 поверхи · Газоблок</div>
+
+    <div style="background:var(--navy);border-radius:var(--r);padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Загальний бюджет</div>
+      <div style="font-size:36px;font-weight:700;color:#fff;letter-spacing:-1px" id="ob-total">—</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">Орієнтовно ±20%</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px" id="ob-stages-grid"></div>
+
+    <div style="background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--r);padding:12px;margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.5">
+      💡 Це груба оцінка. Реальні цифри залежать від ваших цін на матеріали і роботи.
+    </div>
+
+    <button class="btn ba" onclick="obStart()" style="margin-bottom:8px">Почати контролювати бюджет →</button>
+    <button class="btn bo" onclick="obStep2()">← Змінити параметри</button>
+  </div>
+</div>
+
+<!-- ОСНОВНИЙ ДОДАТОК -->
+<div id="main-app" style="display:none">
 <div class="hdr">
   <div class="logo">Прораб<span>.</span>Бюджет</div>
   <div class="sync s-no" id="sync-el">● офлайн</div>
@@ -265,6 +361,8 @@ textarea:focus{outline:none;border-color:var(--accent)}
 </div>
 
 <div class="toast" id="toast-el"></div>
+
+</div><!-- /main-app -->
 
 <script>
 var SCRIPT_CODE = `function doGet(e){return handle(e)}
@@ -684,6 +782,123 @@ load();renderProject();runCalc();
     setInterval(loadClientData,60000);
   }
 })();
+
+// ── ONBOARDING ──
+var OB = { type: '', floors: 0, wall: '', area: 0 };
+
+// Стилі для онбордингу
+(function(){
+  var s = document.createElement('style');
+  s.textContent = '.ob-type-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s}.ob-type-btn.sel{border-color:var(--accent);background:var(--al)}.ob-floor-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 6px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}.ob-floor-btn.sel{border-color:var(--accent);color:var(--accent);background:var(--al)}.ob-wall-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}.ob-wall-btn.sel{border-color:var(--accent);background:var(--al)}';
+  document.head.appendChild(s);
+})();
+
+function selectType(t) {
+  OB.type = t;
+  document.querySelectorAll('.ob-type-btn').forEach(function(b){ b.classList.remove('sel'); });
+  document.getElementById('type-'+t).classList.add('sel');
+  var btn = document.getElementById('ob-next1');
+  btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+}
+
+function selectFloors(f, el) {
+  OB.floors = f;
+  document.querySelectorAll('.ob-floor-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  obCheckStep2();
+}
+
+function selectWall(w, el) {
+  OB.wall = w;
+  document.querySelectorAll('.ob-wall-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  obCheckStep2();
+}
+
+function obCheckStep2() {
+  OB.area = parseFloat(document.getElementById('ob-area').value) || 0;
+  var ok = OB.area > 0 && OB.floors > 0 && OB.wall;
+  var btn = document.getElementById('ob-next2');
+  btn.style.opacity = ok ? '1' : '.4';
+  btn.style.pointerEvents = ok ? 'auto' : 'none';
+}
+
+function obStep1() {
+  document.getElementById('ob-step1').style.display = 'block';
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'none';
+}
+
+function obStep2() {
+  document.getElementById('ob-step1').style.display = 'none';
+  document.getElementById('ob-step2').style.display = 'block';
+  document.getElementById('ob-step3').style.display = 'none';
+}
+
+function obCalculate() {
+  OB.area = parseFloat(document.getElementById('ob-area').value) || 0;
+  if (!OB.area || !OB.floors || !OB.wall) return;
+
+  // Коефіцієнти по типу стін (грн/м² загальної площі)
+  var wallCoef = { 'Газоблок': 8500, 'Цегла': 11000, 'Каркас': 7000, 'Монолітний': 13000 };
+  var base = wallCoef[OB.wall] || 9000;
+  var floorCoef = OB.floors === 1 ? 1 : OB.floors === 2 ? 1.7 : OB.floors === 3 ? 2.3 : 1.85;
+  var total = Math.round(OB.area * base * floorCoef);
+
+  // Розбивка по етапах (%)
+  var stages = [
+    { name: 'Фундамент', pct: 0.18 },
+    { name: 'Коробка (стіни)', pct: 0.28 },
+    { name: 'Дах', pct: 0.15 },
+    { name: 'Вікна і двері', pct: 0.10 },
+    { name: 'Оздоблення', pct: 0.20 },
+    { name: 'Комунікації', pct: 0.09 }
+  ];
+
+  document.getElementById('ob-total').textContent = fmt(total) + ' ₴';
+  document.getElementById('ob-obj-label').textContent = OB.type + ' · ' + OB.area + ' м² · ' + (OB.floors === 0 ? '1+мансарда' : OB.floors + ' ' + (OB.floors === 1 ? 'поверх' : 'поверхи')) + ' · ' + OB.wall;
+
+  var grid = document.getElementById('ob-stages-grid');
+  grid.innerHTML = stages.map(function(st) {
+    var sum = Math.round(total * st.pct);
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px"><div style="font-size:11px;color:var(--t3);margin-bottom:3px">'+st.name+'</div><div style="font-size:15px;font-weight:700;color:var(--text)">'+fmt(sum)+' ₴</div></div>';
+  }).join('');
+
+  // Зберігаємо для подальшого використання
+  OB.total = total;
+  OB.stagesData = stages.map(function(st) {
+    return { name: st.name, budget: Math.round(total * st.pct) };
+  });
+
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'block';
+}
+
+function obStart() {
+  // Додаємо етапи в систему
+  OB.stagesData.forEach(function(st) {
+    var stage = { id: Date.now() + Math.random(), name: st.name, budget: st.budget, spent: 0, status: 'active' };
+    S.stages.push(stage);
+    sync('addStage', { id: stage.id, name: stage.name, budget: stage.budget });
+  });
+  S.pname = OB.type + ' ' + OB.area + ' м²';
+  if (!S.pid) S.pid = 'prorab-' + Date.now();
+  localStorage.setItem('ob_done', '1');
+  save();
+
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  renderProject();
+  updSync(); updLink();
+}
+
+// Показуємо онбординг або одразу додаток
+if (!localStorage.getItem('ob_done') && !new URLSearchParams(window.location.search).get('url')) {
+  document.getElementById('onboarding').style.display = 'block';
+  document.getElementById('ob-step1').style.display = 'block';
+} else {
+  document.getElementById('main-app').style.display = 'block';
+}
 
 </script>
 </body>
