@@ -225,25 +225,59 @@ textarea:focus{outline:none;border-color:var(--accent)}
 <div id="scr-expense" class="scr">
 <div class="wrap">
 
+  <!-- Заплановані позиції з калькулятора -->
   <div id="planned-items-block" style="display:none">
-    <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Заплановані позиції — натисніть щоб оплатити</div>
+    <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Заплановано — натисніть щоб оплатити</div>
     <div id="planned-items-list"></div>
+    <div style="height:1px;background:var(--border);margin:16px 0"></div>
   </div>
 
+  <!-- Основна форма — тільки 3 поля -->
   <div class="card">
     <div class="ctitle">Нова витрата</div>
-    <div class="field"><label>Що купили / оплатили</label><div class="irow"><input type="text" id="en" placeholder="Цемент М400, арматура, бригада..."></div></div>
-    <div class="field"><label>Планова сума (зі смети)</label><div class="irow"><input type="number" id="ep" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div></div>
-    <div class="field"><label>Фактична сума (реально заплатили)</label><div class="irow"><input type="number" id="ea" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div></div>
-    <div id="delta-bl" style="display:none;margin-bottom:12px">
-      <div class="db" id="delta-val"></div>
-      <div style="font-size:11px;color:var(--t3);margin-top:4px" id="delta-txt"></div>
+
+    <div class="field">
+      <label>Що купили або оплатили</label>
+      <div class="irow"><input type="text" id="en" placeholder="Цемент, арматура, бригада..."></div>
     </div>
-    <div class="field"><label>Етап</label><div class="irow"><select id="es"><option value="">— Оберіть етап —</option></select></div></div>
-    <div class="field"><label>Категорія</label><div class="irow"><select id="ec"><option>Матеріали</option><option>Роботи</option><option>Транспорт</option><option>Обладнання</option><option>Інше</option></select></div></div>
-    <div class="field"><label>Коментар (необов'язково)</label><textarea id="ecm" rows="2" placeholder="Знайшли дешевше, ціна зросла..."></textarea></div>
+
+    <div class="field">
+      <label>Сума — скільки заплатили</label>
+      <div class="irow"><input type="number" id="ea" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div>
+    </div>
+
+    <div class="field">
+      <label>Етап</label>
+      <div class="irow"><select id="es"><option value="">— Оберіть етап —</option></select></div>
+    </div>
+
+    <!-- Деталі — приховані за замовчуванням -->
+    <div id="exp-details-toggle" style="font-size:13px;color:var(--accent);cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:4px" onclick="toggleExpDetails()">
+      <span id="exp-details-arrow">▶</span> Додати деталі (необов'язково)
+    </div>
+    <div id="exp-details" style="display:none">
+      <div class="field">
+        <label>Планова сума (якщо відома)</label>
+        <div class="irow"><input type="number" id="ep" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div>
+      </div>
+      <div id="delta-bl" style="display:none;margin-bottom:12px">
+        <div class="db" id="delta-val"></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px" id="delta-txt"></div>
+      </div>
+      <div class="field">
+        <label>Категорія</label>
+        <div class="irow"><select id="ec"><option>Матеріали</option><option>Роботи</option><option>Транспорт</option><option>Обладнання</option><option>Інше</option></select></div>
+      </div>
+      <div class="field">
+        <label>Коментар</label>
+        <textarea id="ecm" rows="2" placeholder="Знайшли дешевше, ціна зросла..."></textarea>
+      </div>
+    </div>
+
     <button class="btn ba" onclick="addExp()">Зафіксувати витрату</button>
   </div>
+
+  <!-- Список витрат -->
   <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Останні витрати</div>
   <div id="exp-list"></div>
 </div>
@@ -618,57 +652,87 @@ function prefillExpense(itemId){
   toast('Введіть фактичну суму ↓');
 }
 
+function toggleExpDetails(){
+  var d=document.getElementById('exp-details');
+  var a=document.getElementById('exp-details-arrow');
+  if(d.style.display==='none'){d.style.display='block';a.textContent='▼';}
+  else{d.style.display='none';a.textContent='▶';}
+}
+
 document.addEventListener('input',function(e){
   if(e.target.id==='ep'||e.target.id==='ea'){
     var p=parseFloat(document.getElementById('ep').value)||0;
     var a=parseFloat(document.getElementById('ea').value)||0;
-    if(p&&a){
+    if(p>0&&a>0){
       var d=a-p;var bl=document.getElementById('delta-bl');var bv=document.getElementById('delta-val');var bt=document.getElementById('delta-txt');
       bl.style.display='block';
       if(d>0){bv.className='db do';bv.textContent='▲ +'+fmt(d)+' ₴ дорожче ніж план';bt.textContent='Замовник побачить різницю і коментар';}
-      else if(d<0){bv.className='db du';bv.textContent='▼ '+fmt(d)+' ₴ дешевше ніж план';bt.textContent='Економія — замовник також побачить';}
+      else if(d<0){bv.className='db du';bv.textContent='▼ '+fmt(Math.abs(d))+' ₴ дешевше ніж план';bt.textContent='Економія — замовник також побачить';}
       else{bv.className='db dn';bv.textContent='✓ Точно за планом';bt.textContent='';}
+    } else {
+      document.getElementById('delta-bl').style.display='none';
     }
   }
 });
 
 async function addExp(){
   var name=document.getElementById('en').value.trim();
-  var planned=parseFloat(document.getElementById('ep').value)||0;
   var actual=parseFloat(document.getElementById('ea').value)||0;
+  var planned=parseFloat(document.getElementById('ep').value)||0;
   var sid=parseInt(document.getElementById('es').value);
   var cat=document.getElementById('ec').value;
   var comment=document.getElementById('ecm').value.trim();
-  if(!name){toast('Введіть назву');return;}
-  if(!actual){toast('Введіть фактичну суму');return;}
+  if(!name){toast('Введіть що купили');return;}
+  if(!actual){toast('Введіть суму');return;}
   if(!sid){toast('Оберіть етап');return;}
-  var exp={id:Date.now(),name,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta:actual-planned};
+  var delta=planned>0?actual-planned:0;
+  var exp={id:Date.now(),name,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta};
   S.expenses.push(exp);
   var stage=S.stages.find(s=>s.id===sid);
   if(stage) stage.spent+=actual;
-  if(Math.abs(exp.delta)>0) S.pending=true;
-  save();
-  // Відмічаємо планову позицію як оплачену
+  if(planned>0&&Math.abs(delta)>0) S.pending=true;
   if(window._prefillItemId){
     var pi=(S.plannedItems||[]).find(function(i){return String(i.id)===String(window._prefillItemId);});
     if(pi) pi.paid=true;
     window._prefillItemId=null;
-    save();
   }
-  document.getElementById('en').value='';document.getElementById('ep').value='';document.getElementById('ea').value='';document.getElementById('ecm').value='';
+  save();
+  document.getElementById('en').value='';
+  document.getElementById('ep').value='';
+  document.getElementById('ea').value='';
+  document.getElementById('ecm').value='';
   document.getElementById('delta-bl').style.display='none';
-  renderExpList();renderPlannedItems();toast('Зафіксовано!');
+  document.getElementById('exp-details').style.display='none';
+  document.getElementById('exp-details-arrow').textContent='▶';
+  renderExpList();renderPlannedItems();renderProject();toast('Зафіксовано!');
   var ok=await sync('addExpense',{date:exp.date,name:exp.name,planned:exp.planned,actual:exp.actual,stage:stage?stage.name:'',cat:exp.cat,comment:exp.comment});
-  if(ok) toast('Синхронізовано з Google Sheets ✓');
+  if(ok) toast('Збережено ✓');
+}
+
+function deleteExp(id){
+  if(!confirm('Видалити цю витрату?')) return;
+  var exp=S.expenses.find(function(e){return e.id===id;});
+  if(!exp) return;
+  var stage=S.stages.find(function(s){return s.id===exp.stageId;});
+  if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
+  S.expenses=S.expenses.filter(function(e){return e.id!==id;});
+  save();renderExpList();renderProject();toast('Видалено');
 }
 
 function renderExpList(){
   var el=document.getElementById('exp-list');if(!el) return;
-  if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.</p></div>';return;}
-  el.innerHTML=[...S.expenses].reverse().slice(0,20).map(function(e){
-    var s=S.stages.find(x=>x.id===e.stageId);
-    var d=e.delta||0;var dc=d>0?'neg':d<0?'pos':'neu';
-    return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div><div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'+':'')+fmt(d)+' від плану':'за планом')+'</div></div></div>';
+  if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.<br>Додайте першу витрату вище.</p></div>';return;}
+  el.innerHTML=[...S.expenses].reverse().slice(0,30).map(function(e){
+    var s=S.stages.find(function(x){return x.id===e.stageId;});
+    var deltaHtml='';
+    if(e.planned>0){
+      var d=e.delta||0;
+      var dc=d>0?'neg':d<0?'pos':'neu';
+      deltaHtml='<div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div>';
+    }
+    return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div>'+
+      '<div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div>'+deltaHtml+'</div>'+
+      '</div>';
   }).join('');
 }
 
