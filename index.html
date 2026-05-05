@@ -856,7 +856,10 @@ function renderProject(){
 // EXPENSES
 function fillStageSelect(){
   var sel=document.getElementById('es');if(!sel) return;
-  sel.innerHTML='<option value="">— Оберіть етап —</option>'+S.stages.filter(s=>s.status==='active').map(s=>'<option value="'+s.id+'">'+s.name+'</option>').join('');
+  var active=S.stages.filter(function(s){return s.status==='active';});
+  sel.innerHTML='<option value="">— Оберіть етап —</option>'+active.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  // Якщо тільки один активний етап — обираємо його автоматично
+  if(active.length===1) sel.value=active[0].id;
 }
 
 function renderPlannedItems(){
@@ -1144,7 +1147,7 @@ function exportJ(){
 }
 function clearAll(){if(!confirm('Видалити дані проєкту? Налаштування підключення збережуться.')) return;S.stages=[];S.expenses=[];S.plannedItems=[];S.pending=false;save();renderProject();toast('Дані проєкту видалено. Налаштування збережені.');}
 
-load();renderProject();runCalc();
+load();renderProject();runCalc();fillStageSelect();
 
 // Якщо відкрито як сторінка замовника — показуємо клієнтський вид
 (function(){
