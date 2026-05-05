@@ -248,6 +248,30 @@ textarea:focus{outline:none;border-color:var(--accent)}
       <div class="irow"><input type="text" id="en" placeholder="Цемент, арматура, бригада..."></div>
     </div>
 
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="field" style="margin-bottom:0">
+        <label>Кількість</label>
+        <div class="irow"><input type="number" id="eq" placeholder="0" inputmode="decimal" oninput="calcExpTotal()" style="min-width:0"></div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Одиниця</label>
+        <select id="eu" style="height:46px;border:1px solid var(--border);border-radius:var(--rs);padding:0 8px;font-size:14px;font-family:Manrope,sans-serif;color:var(--text);background:var(--surface);width:100%;-webkit-appearance:none">
+          <option>шт</option>
+          <option>кг</option>
+          <option>мішків</option>
+          <option>м²</option>
+          <option>м³</option>
+          <option>м</option>
+          <option>л</option>
+          <option>т</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Ціна / од.</label>
+        <div class="irow"><input type="number" id="eup" placeholder="0" inputmode="decimal" oninput="calcExpTotal()" style="min-width:0"><span class="unit">₴</span></div>
+      </div>
+    </div>
+
     <div class="field">
       <label>Сума — скільки заплатили</label>
       <div class="irow"><input type="number" id="ea" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div>
@@ -543,7 +567,16 @@ textarea:focus{outline:none;border-color:var(--accent)}
   </div>
 </div>
 
-<div class="mo" id="m-close" onclick="closeModal('m-close')">
+<div class="mo" id="m-edit-budget" onclick="closeModal('m-edit-budget')">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt">Змінити бюджет етапу</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6" id="eb-stage-name"></p>
+    <div class="field"><label>Новий бюджет (за вашою сметою)</label><div class="irow"><input type="number" id="eb-budget" inputmode="decimal" placeholder="0"><span class="unit">₴</span></div></div>
+    <button class="btn ba" onclick="saveEditBudget()">Зберегти</button>
+    <button class="btn bo" onclick="closeModal('m-edit-budget')">Скасувати</button>
+  </div>
+</div>
   <div class="mdl" onclick="event.stopPropagation()">
     <div class="mh"></div>
     <div class="mt" id="mc-title">Закрити етап</div>
@@ -578,6 +611,13 @@ function handle(e){
     var d=JSON.parse(e.postData.contents);
     if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['ID','Назва','Бюджет','Статус','Дата']);
     sh.appendRow([d.id,d.name,d.budget,'active',new Date().toLocaleDateString('uk-UA')]);
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='updateStage'){
+    var sh=getSheet(ss,pid+'_етапи');
+    var d=JSON.parse(e.postData.contents);
+    var rows=sh.getDataRange().getValues();
+    for(var i=1;i<rows.length;i++){if(rows[i][0]==d.id){sh.getRange(i+1,3).setValue(d.budget);break;}}
     return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
   }
   if(act==='closeStage'){
@@ -720,7 +760,31 @@ async function addStage(){
   sync('addStage',{id:stage.id,name:stage.name,budget:stage.budget});
 }
 
-var _closingId=null;
+var _editBudgetId=null;
+function showEditBudget(id){
+  _editBudgetId=id;
+  var s=S.stages.find(function(x){return x.id===id;});
+  if(!s) return;
+  document.getElementById('eb-stage-name').textContent='Етап: '+s.name+' · Поточний бюджет: '+fmt(s.budget)+' ₴';
+  document.getElementById('eb-budget').value=s.budget;
+  openModal('m-edit-budget');
+}
+function saveEditBudget(){
+  if(!_editBudgetId) return;
+  var newBudget=parseFloat(document.getElementById('eb-budget').value)||0;
+  if(!newBudget){toast('Введіть суму');return;}
+  var s=S.stages.find(function(x){return x.id===_editBudgetId;});
+  if(s){
+    s.budget=newBudget;
+    save();
+    closeModal('m-edit-budget');
+    renderProject();
+    toast('Бюджет оновлено!');
+    // Синхронізуємо зміну в таблицю
+    sync('updateStage',{id:s.id,name:s.name,budget:s.budget});
+  }
+  _editBudgetId=null;
+}
 function showCloseModal(id){
   _closingId=id;
   var s=S.stages.find(x=>x.id===id);if(!s) return;
@@ -766,7 +830,7 @@ function renderProject(){
     }).join('');
     var act=s.status==='closed'
       ?'<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">Закрито · чекаємо підтвердження замовника</div>'
-      :'<div class="scact"><button class="sab pa" onclick="go(\'expense\')">+ Витрата</button><button class="sab pg" onclick="showCloseModal('+s.id+')">Закрити етап</button></div>';
+      :'<div class="scact"><button class="sab pa" onclick="go(\'expense\')">+ Витрата</button><button class="sab" onclick="showEditBudget('+s.id+')" style="background:var(--s2);color:var(--t2)">Змінити бюджет</button><button class="sab pg" onclick="showCloseModal('+s.id+')">Закрити</button></div>';
     return '<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(s.budget)+' ₴</span> · Витрачено: <span>'+fmt(s.spent)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin:10px 0">'+exh+'</div>':'')+act+'</div>';
   }).join('');
 }
@@ -816,6 +880,14 @@ function prefillExpense(itemId){
   toast('Введіть фактичну суму ↓');
 }
 
+function calcExpTotal(){
+  var q=parseFloat(document.getElementById('eq').value)||0;
+  var p=parseFloat(document.getElementById('eup').value)||0;
+  if(q>0&&p>0){
+    document.getElementById('ea').value=Math.round(q*p);
+  }
+}
+
 function toggleExpDetails(){
   var d=document.getElementById('exp-details');
   var a=document.getElementById('exp-details-arrow');
@@ -841,6 +913,9 @@ document.addEventListener('input',function(e){
 
 async function addExp(){
   var name=document.getElementById('en').value.trim();
+  var qty=parseFloat(document.getElementById('eq').value)||0;
+  var unit=document.getElementById('eu').value;
+  var unitPrice=parseFloat(document.getElementById('eup').value)||0;
   var actual=parseFloat(document.getElementById('ea').value)||0;
   var planned=parseFloat(document.getElementById('ep').value)||0;
   var sid=parseInt(document.getElementById('es').value);
@@ -849,8 +924,11 @@ async function addExp(){
   if(!name){toast('Введіть що купили');return;}
   if(!actual){toast('Введіть суму');return;}
   if(!sid){toast('Оберіть етап');return;}
+  // Додаємо кількість до назви якщо введено
+  var fullName=name;
+  if(qty>0) fullName=name+' '+qty+' '+unit+(unitPrice>0?' по '+fmt(unitPrice)+' ₴':'');
   var delta=planned>0?actual-planned:0;
-  var exp={id:Date.now(),name,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta};
+  var exp={id:Date.now(),name:fullName,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta};
   S.expenses.push(exp);
   var stage=S.stages.find(s=>s.id===sid);
   if(stage) stage.spent+=actual;
@@ -862,7 +940,8 @@ async function addExp(){
   }
   save();
   document.getElementById('en').value='';
-  document.getElementById('ep').value='';
+  document.getElementById('eq').value='';
+  document.getElementById('eup').value='';
   document.getElementById('ea').value='';
   document.getElementById('ecm').value='';
   document.getElementById('delta-bl').style.display='none';
@@ -1208,17 +1287,18 @@ function obCalculate() {
 }
 
 function obStart() {
-  // Додаємо етапи в систему
+  // Спочатку встановлюємо pid щоб sync знав куди писати
+  S.pname = OB.type + ' ' + OB.area + ' м²';
+  if (!S.pid) S.pid = 'prorab-' + Date.now();
+  localStorage.setItem('ob_done', '1');
+  save();
+  // Тепер синхронізуємо етапи з правильним pid
   OB.stagesData.forEach(function(st) {
     var stage = { id: Date.now() + Math.random(), name: st.name, budget: st.budget, spent: 0, status: 'active' };
     S.stages.push(stage);
     sync('addStage', { id: stage.id, name: stage.name, budget: stage.budget });
   });
-  S.pname = OB.type + ' ' + OB.area + ' м²';
-  if (!S.pid) S.pid = 'prorab-' + Date.now();
-  localStorage.setItem('ob_done', '1');
   save();
-
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
   renderProject();
