@@ -268,13 +268,17 @@ textarea:focus{outline:none;border-color:var(--accent)}
         <label>Одиниця</label>
         <select id="eu" style="height:46px;border:1px solid var(--border);border-radius:var(--rs);padding:0 8px;font-size:14px;font-family:Manrope,sans-serif;color:var(--text);background:var(--surface);width:100%;-webkit-appearance:none">
           <option>шт</option>
-          <option>кг</option>
           <option>мішків</option>
+          <option>кг</option>
+          <option>т</option>
           <option>м²</option>
           <option>м³</option>
-          <option>м</option>
+          <option>м.п.</option>
           <option>л</option>
-          <option>т</option>
+          <option>рул</option>
+          <option>упак</option>
+          <option>компл</option>
+          <option>зміна</option>
         </select>
       </div>
       <div class="field" style="margin-bottom:0">
@@ -1324,7 +1328,7 @@ function obCalculate() {
 }
 
 function obStart() {
-  // Читаємо суми з полів уточнення (крок 4) якщо вони є
+  // Читаємо уточнені суми з кроку 4
   if(OB.stagesData) {
     OB.stagesData.forEach(function(st, i) {
       var input = document.getElementById('ob-budget-'+i);
@@ -1337,16 +1341,22 @@ function obStart() {
   S.pname = OB.type + ' ' + OB.area + ' м²';
   if (!S.pid) S.pid = 'prorab-' + Date.now();
   localStorage.setItem('ob_done', '1');
-  save();
+  // Додаємо всі етапи в S.stages
+  S.stages = [];
   OB.stagesData.forEach(function(st) {
     var stage = { id: Date.now() + Math.random(), name: st.name, budget: st.budget, spent: 0, status: 'active' };
     S.stages.push(stage);
+  });
+  // Зберігаємо ВСЕ одразу
+  save();
+  // Потім синхронізуємо в таблицю
+  S.stages.forEach(function(stage) {
     sync('addStage', { id: stage.id, name: stage.name, budget: stage.budget });
   });
-  save();
   document.getElementById('onboarding').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
   renderProject();
+  fillStageSelect();
   updSync(); updLink();
 }
 
