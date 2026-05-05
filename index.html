@@ -184,10 +184,21 @@ textarea:focus{outline:none;border-color:var(--accent)}
       💡 Це груба оцінка. Реальні цифри залежать від ваших цін на матеріали і роботи.
     </div>
 
-    <button class="btn ba" onclick="obStart()" style="margin-bottom:8px">Почати контролювати бюджет →</button>
+    <button class="btn ba" onclick="obStep4()" style="margin-bottom:8px">Уточнити бюджет по етапах →</button>
     <button class="btn bo" onclick="obStep2()">← Змінити параметри</button>
   </div>
-</div>
+
+  <!-- КРОК 4: Уточнення бюджету -->
+  <div id="ob-step4" style="display:none;padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">Уточніть бюджет</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:4px;line-height:1.5">Нижче — приблизні суми з розрахунку.</div>
+    <div style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:16px">Якщо є готова смета — введіть свої точні цифри. Або залишіть як є і натисніть «Починаємо».</div>
+    <div id="ob-budget-list" style="margin-bottom:16px"></div>
+    <button class="btn ba" onclick="obStart()" style="margin-bottom:8px">Все правильно — починаємо! →</button>
+    <button class="btn bo" onclick="obStep3back()">← Назад</button>
+  </div>
+
+</div><!-- /onboarding -->
 
 <!-- ОСНОВНИЙ ДОДАТОК -->
 <div id="main-app" style="display:none">
@@ -577,6 +588,8 @@ textarea:focus{outline:none;border-color:var(--accent)}
     <button class="btn bo" onclick="closeModal('m-edit-budget')">Скасувати</button>
   </div>
 </div>
+
+<div class="mo" id="m-close" onclick="closeModal('m-close')">
   <div class="mdl" onclick="event.stopPropagation()">
     <div class="mh"></div>
     <div class="mt" id="mc-title">Закрити етап</div>
@@ -674,6 +687,7 @@ function go(name){
 }
 function openModal(id){document.getElementById(id).classList.add('on');}
 function closeModal(id){document.getElementById(id).classList.remove('on');}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){['m-stage','m-close','m-edit-budget'].forEach(function(id){closeModal(id);});}});
 
 function updSync(){
   var el=document.getElementById('sync-el');
@@ -1242,9 +1256,32 @@ function obStep1() {
 }
 
 function obStep2() {
-  document.getElementById('ob-step1').style.display = 'none';
-  document.getElementById('ob-step2').style.display = 'block';
-  document.getElementById('ob-step3').style.display = 'none';
+  document.getElementById('ob-step1').style.display='none';
+  document.getElementById('ob-step2').style.display='block';
+  document.getElementById('ob-step3').style.display='none';
+  document.getElementById('ob-step4').style.display='none';
+}
+
+function obStep3back(){
+  document.getElementById('ob-step4').style.display='none';
+  document.getElementById('ob-step3').style.display='block';
+}
+
+function obStep4(){
+  document.getElementById('ob-step3').style.display='none';
+  document.getElementById('ob-step4').style.display='block';
+  var list=document.getElementById('ob-budget-list');
+  list.innerHTML=OB.stagesData.map(function(st,i){
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px">'+
+      '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">'+st.name+'</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<input type="number" id="ob-budget-'+i+'" value="'+st.budget+'" inputmode="decimal" '+
+      'style="flex:1;height:44px;border:1px solid var(--border);border-radius:var(--rs);padding:0 12px;font-size:15px;font-family:Manrope,sans-serif;font-weight:600;color:#0000FF;background:var(--surface)">'+
+      '<span style="font-size:13px;color:var(--t3);min-width:18px">₴</span>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--t3);margin-top:4px">Приблизно: '+fmt(st.budget)+' ₴</div>'+
+      '</div>';
+  }).join('');
 }
 
 function obCalculate() {
@@ -1287,12 +1324,20 @@ function obCalculate() {
 }
 
 function obStart() {
-  // Спочатку встановлюємо pid щоб sync знав куди писати
+  // Читаємо суми з полів уточнення (крок 4) якщо вони є
+  if(OB.stagesData) {
+    OB.stagesData.forEach(function(st, i) {
+      var input = document.getElementById('ob-budget-'+i);
+      if(input) {
+        var val = parseFloat(input.value)||0;
+        if(val > 0) st.budget = val;
+      }
+    });
+  }
   S.pname = OB.type + ' ' + OB.area + ' м²';
   if (!S.pid) S.pid = 'prorab-' + Date.now();
   localStorage.setItem('ob_done', '1');
   save();
-  // Тепер синхронізуємо етапи з правильним pid
   OB.stagesData.forEach(function(st) {
     var stage = { id: Date.now() + Math.random(), name: st.name, budget: st.budget, spent: 0, status: 'active' };
     S.stages.push(stage);
