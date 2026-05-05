@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Прораб.Бюджет</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F3EE;--surface:#fff;--s2:#F0EDE6;--border:#E2DDD4;--text:#1A1814;--t2:#6B6560;--t3:#9E9890;--accent:#D4541A;--al:#FDF0EB;--ad:#A83F12;--green:#2D6A2D;--gl:#EAF3EA;--red:#A32D2D;--rl:#FCEBEB;--navy:#1A2332;--n2:#243042;--amber:#B87A0A;--ambl:#FEF6E4;--r:12px;--rs:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+.hdr{background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:17px;font-weight:700;color:#fff}.logo span{color:var(--accent)}
+.sync{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.s-ok{background:rgba(45,106,45,.3);color:#7FD47F}.s-err{background:rgba(163,45,45,.3);color:#F09595}.s-no{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.nav{background:var(--n2);display:flex;overflow-x:auto;scrollbar-width:none;padding:0}
+.nav::-webkit-scrollbar{display:none}
+.tab{flex:1;min-width:0;padding:13px 6px;font-size:14px;font-weight:600;color:rgba(255,255,255,.45);cursor:pointer;border:none;border-bottom:2px solid transparent;white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;background:transparent;font-family:'Manrope',sans-serif}
+.tab.on{color:#fff;border-bottom-color:var(--accent)}
+.scr{display:none}.scr.on{display:block}
+.wrap{padding:16px;max-width:480px;margin:0 auto;padding-bottom:24px}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.ctitle{font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.hero{background:var(--navy);border-radius:var(--r);padding:20px 16px;margin-bottom:12px}
+.hl{font-size:11px;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.ha{font-size:36px;font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+.hrow{display:flex;gap:16px}
+.hstat .l{font-size:11px;color:rgba(255,255,255,.4)}.hstat .v{font-size:14px;font-weight:600;color:rgba(255,255,255,.85)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--t2);margin-bottom:5px;font-weight:500}
+.irow{display:flex;align-items:center;gap:8px}
+.irow input,.irow select{flex:1;height:46px;border:1px solid var(--border);border-radius:var(--rs);padding:0 12px;font-size:15px;font-family:'Manrope',sans-serif;font-weight:500;color:var(--text);background:var(--surface);-webkit-appearance:none;appearance:none}
+.irow input:focus,.irow select:focus{outline:none;border-color:var(--accent)}
+.unit{font-size:13px;color:var(--t3);min-width:28px;font-weight:500}
+select{background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%236B6560' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:15px;font-family:'Manrope',sans-serif;color:var(--text);background:var(--surface);resize:none}
+textarea:focus{outline:none;border-color:var(--accent)}
+.btn{display:block;width:100%;height:50px;border-radius:var(--r);font-size:15px;font-weight:600;font-family:'Manrope',sans-serif;cursor:pointer;border:none;transition:all .15s;text-align:center;line-height:50px}
+.btn:active{transform:scale(.98)}
+.ba{background:var(--accent);color:#fff;margin-bottom:8px}
+.bn{background:var(--navy);color:#fff;margin-bottom:8px}
+.bo{background:transparent;border:1px solid var(--border);color:var(--t2)}
+.bg{background:var(--green);color:#fff;margin-bottom:8px}
+.bsm{height:38px;line-height:38px;font-size:13px;border-radius:var(--rs)}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.sch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.scn{font-size:15px;font-weight:700;color:var(--text)}
+.scs{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.st-a{background:var(--ambl);color:var(--amber)}.st-d{background:var(--gl);color:var(--green)}.st-p{background:var(--s2);color:var(--t3)}
+.scbar{height:6px;background:var(--border);border-radius:3px;margin-bottom:6px;overflow:hidden}
+.scfill{height:100%;border-radius:3px;transition:width .4s}
+.fg{background:var(--green)}.fa{background:var(--amber)}.fr{background:var(--red)}
+.scnums{display:flex;justify-content:space-between;font-size:12px;color:var(--t3);margin-bottom:10px}
+.scnums span{font-weight:600;color:var(--t2)}
+.scact{display:flex;gap:6px}
+.sab{flex:1;height:34px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;font-family:'Manrope',sans-serif;color:var(--t2);cursor:pointer}
+.sab.pa{background:var(--accent);color:#fff;border-color:var(--accent)}.sab.pg{background:var(--green);color:#fff;border-color:var(--green)}
+.ci{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cn{font-size:14px;font-weight:600;color:var(--text)}.cm{font-size:11px;color:var(--t3);margin-top:2px}
+.cr{text-align:right}.ca{font-size:15px;font-weight:700}.ccat{font-size:11px;color:var(--t3);margin-top:2px}
+.neg{color:var(--red)}.pos{color:var(--green)}.neu{color:var(--text)}
+.db{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px}
+.do{background:var(--rl);color:var(--red)}.du{background:var(--gl);color:var(--green)}.dn{background:var(--s2);color:var(--t3)}
+.appr{background:var(--ambl);border:1.5px solid var(--amber);border-radius:var(--r);padding:14px;margin-bottom:12px}
+.at{font-size:14px;font-weight:700;color:var(--amber)}.atx{font-size:12px;color:var(--amber);opacity:.85;margin-bottom:10px;line-height:1.5;margin-top:4px}
+.slink{background:var(--s2);border-radius:var(--rs);padding:10px 12px;font-size:12px;color:var(--t2);word-break:break-all;border:1px solid var(--border);margin-bottom:8px;font-family:monospace}
+.empty{text-align:center;padding:32px 20px;color:var(--t3)}
+.empty .ic{font-size:36px;margin-bottom:8px}.empty p{font-size:13px;line-height:1.6}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.rc{background:var(--s2);border-radius:var(--rs);padding:10px 12px}
+.rl2{font-size:11px;color:var(--t3);margin-bottom:3px;font-weight:500}.rv{font-size:18px;font-weight:700;color:var(--text)}.ru{font-size:11px;color:var(--t2)}
+.tc{background:var(--navy);border-radius:var(--r);padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tl{font-size:13px;color:rgba(255,255,255,.6);font-weight:500}.tv{font-size:22px;font-weight:700;color:#fff}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.tbtn{border:1px solid var(--border);border-radius:var(--rs);padding:10px 8px;font-size:13px;font-weight:500;color:var(--t2);background:var(--surface);cursor:pointer;text-align:center;font-family:'Manrope',sans-serif}
+.tbtn.on{border-color:var(--accent);color:var(--accent);background:var(--al)}
+.hint{font-size:11px;color:var(--t3);text-align:center;margin-bottom:14px;line-height:1.5}
+.mo{display:none;position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:200;align-items:flex-end;justify-content:center}
+.mo.on{display:flex}
+.mdl{background:var(--surface);border-radius:var(--r) var(--r) 0 0;padding:20px 20px 36px;width:100%;max-width:480px}
+.mh{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.mt{font-size:18px;font-weight:700;margin-bottom:16px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy);color:#fff;padding:12px 20px;border-radius:24px;font-size:14px;font-weight:500;z-index:1000;transition:transform .3s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.divhr{display:flex;align-items:center;gap:8px;margin:12px 0;font-size:12px;color:var(--t3)}
+.divhr::before,.divhr::after{content:'';flex:1;border-top:1px solid var(--border)}
+.calc-sel-btn{border:1px solid var(--border);border-radius:var(--rs);padding:10px 6px;font-size:13px;font-weight:500;color:var(--t2);background:var(--surface);cursor:pointer;text-align:center;font-family:'Manrope',sans-serif;transition:all .15s}
+.calc-sel-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.calc-total-block{background:var(--navy);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.calc-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;color:rgba(255,255,255,.6)}
+.calc-total-row span:last-child{font-size:15px;font-weight:600;color:#fff}
+.calc-total-main{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;font-size:13px;color:rgba(255,255,255,.6)}
+.calc-total-main span:last-child{font-size:22px;font-weight:700;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ОНБОРДИНГ — показується тільки вперше -->
+<div id="onboarding" style="display:none;min-height:100vh;background:var(--bg)">
+  <div style="background:var(--navy);padding:20px 20px 24px">
+    <div class="logo">Прораб<span>.</span>Бюджет</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-top:4px">Швидкий розрахунок і контроль бюджету</div>
+  </div>
+
+  <!-- КРОК 1: Що будуємо -->
+  <div id="ob-step1" style="padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">Що будуємо?</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Оберіть тип об'єкта</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
+      <div onclick="selectType('Котедж')" class="ob-type-btn" id="type-Котедж">
+        <div style="font-size:28px;margin-bottom:6px">🏠</div>
+        <div style="font-weight:600;font-size:14px">Котедж</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Приватний будинок</div>
+      </div>
+      <div onclick="selectType('Таунхаус')" class="ob-type-btn" id="type-Таунхаус">
+        <div style="font-size:28px;margin-bottom:6px">🏘️</div>
+        <div style="font-weight:600;font-size:14px">Таунхаус</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Зблокований будинок</div>
+      </div>
+      <div onclick="selectType('Комерційне')" class="ob-type-btn" id="type-Комерційне">
+        <div style="font-size:28px;margin-bottom:6px">🏢</div>
+        <div style="font-weight:600;font-size:14px">Комерційне</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Офіс, магазин</div>
+      </div>
+      <div onclick="selectType('Прибудова')" class="ob-type-btn" id="type-Прибудова">
+        <div style="font-size:28px;margin-bottom:6px">🔧</div>
+        <div style="font-weight:600;font-size:14px">Прибудова</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">Реконструкція</div>
+      </div>
+    </div>
+    <button class="btn ba" id="ob-next1" onclick="obStep2()" style="opacity:.4;pointer-events:none">Далі →</button>
+  </div>
+
+  <!-- КРОК 2: Параметри -->
+  <div id="ob-step2" style="display:none;padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">Параметри об'єкта</div>
+    <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Три цифри — і ви отримаєте орієнтовний бюджет</div>
+
+    <div class="field">
+      <label>Площа будинку</label>
+      <div class="irow"><input type="number" id="ob-area" placeholder="150" inputmode="decimal" oninput="obCheckStep2()"><span class="unit">м²</span></div>
+    </div>
+
+    <div class="field">
+      <label>Кількість поверхів</label>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px">
+        <div onclick="selectFloors(1,this)" class="ob-floor-btn">1</div>
+        <div onclick="selectFloors(2,this)" class="ob-floor-btn">2</div>
+        <div onclick="selectFloors(3,this)" class="ob-floor-btn">3</div>
+        <div onclick="selectFloors(0,this)" class="ob-floor-btn" style="font-size:11px">1+мансарда</div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-top:12px">
+      <label>Тип стін</label>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+        <div onclick="selectWall('Газоблок',this)" class="ob-wall-btn">🧱 Газоблок / піноблок</div>
+        <div onclick="selectWall('Цегла',this)" class="ob-wall-btn">🔴 Цегла</div>
+        <div onclick="selectWall('Каркас',this)" class="ob-wall-btn">🪵 Каркасний будинок</div>
+        <div onclick="selectWall('Монолітний',this)" class="ob-wall-btn">🏗️ Монолітний залізобетон</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn bo" onclick="obStep1()" style="flex:1">← Назад</button>
+      <button class="btn ba" id="ob-next2" onclick="obCalculate()" style="flex:2;opacity:.4;pointer-events:none">Розрахувати →</button>
+    </div>
+  </div>
+
+  <!-- КРОК 3: Результат -->
+  <div id="ob-step3" style="display:none;padding:20px;max-width:480px;margin:0 auto">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px">Орієнтовний бюджет</div>
+    <div style="font-size:13px;color:var(--t2);margin-bottom:16px" id="ob-obj-label">Котедж · 150 м² · 2 поверхи · Газоблок</div>
+
+    <div style="background:var(--navy);border-radius:var(--r);padding:16px;margin-bottom:12px">
+      <div style="font-size:11px;color:rgba(255,255,255,.45);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">Загальний бюджет</div>
+      <div style="font-size:36px;font-weight:700;color:#fff;letter-spacing:-1px" id="ob-total">—</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:4px">Орієнтовно ±20%</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px" id="ob-stages-grid"></div>
+
+    <div style="background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--r);padding:12px;margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.5">
+      💡 Це груба оцінка. Реальні цифри залежать від ваших цін на матеріали і роботи.
+    </div>
+
+    <button class="btn ba" onclick="obStart()" style="margin-bottom:8px">Почати контролювати бюджет →</button>
+    <button class="btn bo" onclick="obStep2()">← Змінити параметри</button>
+  </div>
+</div>
+
+<!-- ОСНОВНИЙ ДОДАТОК -->
+<div id="main-app" style="display:none">
+<div class="hdr">
+  <div class="logo">Прораб<span>.</span>Бюджет</div>
+  <div class="sync s-no" id="sync-el">● офлайн</div>
+</div>
+<div class="nav">
+  <button class="tab on" onclick="go('project')">Проєкт</button>
+  <button class="tab" onclick="go('expense')">+ Витрата</button>
+  <button class="tab" onclick="go('calc')">Калькулятор</button>
+  <button class="tab" onclick="go('settings')">Налаштування</button>
+</div>
+
+<!-- ПРОЄКТ -->
+<div id="scr-project" class="scr on">
+<div class="wrap">
+  <div class="hero">
+    <div class="hl">Залишилось на об'єкті</div>
+    <div class="ha" id="h-rem">0 ₴</div>
+    <div class="hrow">
+      <div class="hstat"><div class="l">Бюджет</div><div class="v" id="h-bud">0 ₴</div></div>
+      <div class="hstat"><div class="l">Витрачено</div><div class="v" id="h-spe">0 ₴</div></div>
+      <div class="hstat"><div class="l">Сьогодні</div><div class="v" id="h-tod">0 ₴</div></div>
+    </div>
+  </div>
+  <div id="appr-block" style="display:none">
+    <div class="appr">
+      <div class="at">⚡ Є зміни — замовник ще не бачив</div>
+      <div class="atx">Були зміни в кошторисі. Надішліть посилання замовнику щоб він підтвердив.</div>
+      <button class="btn bsm ba" style="width:auto;padding:0 16px" onclick="copyLink()">Надіслати замовнику</button>
+    </div>
+  </div>
+  <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>
+  <div id="stages-el"></div>
+  <button class="btn ba" onclick="openModal('m-stage')">+ Додати етап</button>
+  <button class="btn bo" onclick="copyLink()">Посилання для замовника</button>
+</div>
+</div>
+
+<!-- ВИТРАТА -->
+<div id="scr-expense" class="scr">
+<div class="wrap">
+
+  <!-- Заплановані позиції з калькулятора -->
+  <div id="planned-items-block" style="display:none">
+    <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Заплановано — натисніть щоб оплатити</div>
+    <div id="planned-items-list"></div>
+    <div style="height:1px;background:var(--border);margin:16px 0"></div>
+  </div>
+
+  <!-- Основна форма — тільки 3 поля -->
+  <div class="card">
+    <div class="ctitle">Нова витрата</div>
+
+    <div class="field">
+      <label>Що купили або оплатили</label>
+      <div class="irow"><input type="text" id="en" placeholder="Цемент, арматура, бригада..."></div>
+    </div>
+
+    <div class="field">
+      <label>Сума — скільки заплатили</label>
+      <div class="irow"><input type="number" id="ea" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div>
+    </div>
+
+    <div class="field">
+      <label>Етап</label>
+      <div class="irow"><select id="es"><option value="">— Оберіть етап —</option></select></div>
+    </div>
+
+    <!-- Деталі — приховані за замовчуванням -->
+    <div id="exp-details-toggle" style="font-size:13px;color:var(--accent);cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:4px" onclick="toggleExpDetails()">
+      <span id="exp-details-arrow">▶</span> Додати деталі (необов'язково)
+    </div>
+    <div id="exp-details" style="display:none">
+      <div class="field">
+        <label>Планова сума (якщо відома)</label>
+        <div class="irow"><input type="number" id="ep" placeholder="0" inputmode="decimal"><span class="unit">₴</span></div>
+      </div>
+      <div id="delta-bl" style="display:none;margin-bottom:12px">
+        <div class="db" id="delta-val"></div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px" id="delta-txt"></div>
+      </div>
+      <div class="field">
+        <label>Категорія</label>
+        <div class="irow"><select id="ec"><option>Матеріали</option><option>Роботи</option><option>Транспорт</option><option>Обладнання</option><option>Інше</option></select></div>
+      </div>
+      <div class="field">
+        <label>Коментар</label>
+        <textarea id="ecm" rows="2" placeholder="Знайшли дешевше, ціна зросла..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn ba" onclick="addExp()">Зафіксувати витрату</button>
+  </div>
+
+  <!-- Список витрат -->
+  <div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Останні витрати</div>
+  <div id="exp-list"></div>
+</div>
+</div>
+
+<!-- КАЛЬКУЛЯТОР -->
+<div id="scr-calc" class="scr">
+<div class="wrap">
+
+  <!-- Вибір калькулятора -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+    <button class="calc-sel-btn on" onclick="showCalc('fund',this)">🏗️ Фундамент</button>
+    <button class="calc-sel-btn" onclick="showCalc('walls',this)">🧱 Стіни</button>
+    <button class="calc-sel-btn" onclick="showCalc('roof',this)">🏠 Дах</button>
+    <button class="calc-sel-btn" onclick="showCalc('floor',this)">▪️ Підлога</button>
+    <button class="calc-sel-btn" onclick="showCalc('windows',this)">🪟 Вікна/двері</button>
+    <button class="calc-sel-btn" onclick="showCalc('tile',this)">🔲 Плитка</button>
+  </div>
+
+  <!-- ФУНДАМЕНТ -->
+  <div id="calc-fund">
+    <div class="card">
+      <div class="ctitle">Тип фундаменту</div>
+      <div class="tgrid">
+        <button class="tbtn on" onclick="setCT('стрічковий',this)">Стрічковий</button>
+        <button class="tbtn" onclick="setCT('плитний',this)">Плитний</button>
+        <button class="tbtn" onclick="setCT('стовпчастий',this)">Стовпчастий</button>
+        <button class="tbtn" onclick="setCT('монолітний',this)">Монолітний</button>
+      </div>
+      <div class="ctitle">Параметри</div>
+      <div class="field"><label id="cpl">Периметр</label><div class="irow"><input type="number" id="cp" value="40" inputmode="decimal" oninput="runCalc()"><span class="unit">м</span></div></div>
+      <div class="field"><label>Глибина</label><div class="irow"><input type="number" id="cd" value="1.5" step="0.1" inputmode="decimal" oninput="runCalc()"><span class="unit">м</span></div></div>
+      <div class="field"><label id="cwl">Ширина стрічки</label><div class="irow"><input type="number" id="cw" value="0.4" step="0.05" inputmode="decimal" oninput="runCalc()"><span class="unit">м</span></div></div>
+      <div class="ctitle" style="margin-top:4px">Ціни</div>
+      <div class="field"><label>Бетон / м³</label><div class="irow"><input type="number" id="cpc" value="2800" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Арматура / кг</label><div class="irow"><input type="number" id="cpa" value="28" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Роботи (загальна сума)</label><div class="irow"><input type="number" id="cwork" value="0" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Доставка</label><div class="irow"><input type="number" id="cdel" value="0" inputmode="decimal" oninput="runCalc()"><span class="unit">₴</span></div></div>
+    </div>
+    <div class="rgrid">
+      <div class="rc"><div class="rl2">Бетон (+5%)</div><div class="rv" id="cr1">—</div><div class="ru">м³</div></div>
+      <div class="rc"><div class="rl2">Арматура</div><div class="rv" id="cr2">—</div><div class="ru">кг</div></div>
+      <div class="rc"><div class="rl2">Опалубка</div><div class="rv" id="cr3">—</div><div class="ru">м²</div></div>
+      <div class="rc"><div class="rl2">Об'єм</div><div class="rv" id="cr4">—</div><div class="ru">м³</div></div>
+    </div>
+    <div class="calc-total-block">
+      <div class="calc-total-row"><span>Матеріали</span><span id="ctot-mat">—</span></div>
+      <div class="calc-total-row"><span>Роботи</span><span id="ctot-work">—</span></div>
+      <div class="calc-total-row"><span>Доставка</span><span id="ctot-del">—</span></div>
+      <div class="calc-total-main"><span>Разом</span><span id="ctot">—</span></div>
+    </div>
+    <p class="hint">Ціни орієнтовні — змінюйте під свої дані.</p>
+    <button class="btn ba" onclick="calcToStage()">Додати як бюджет етапу</button>
+  </div>
+
+  <!-- СТІНИ -->
+  <div id="calc-walls" style="display:none">
+    <div class="card">
+      <div class="ctitle">Матеріал стін</div>
+      <div class="tgrid">
+        <button class="tbtn on" onclick="setWallType('газоблок',this)">Газоблок</button>
+        <button class="tbtn" onclick="setWallType('цегла',this)">Цегла</button>
+        <button class="tbtn" onclick="setWallType('каркас',this)">Каркас</button>
+        <button class="tbtn" onclick="setWallType('монолітний',this)">Монолітний</button>
+      </div>
+      <div class="ctitle">Параметри</div>
+      <div class="field"><label>Периметр стін</label><div class="irow"><input type="number" id="w-perim" value="40" inputmode="decimal" oninput="calcWalls()"><span class="unit">м</span></div></div>
+      <div class="field"><label>Висота стін</label><div class="irow"><input type="number" id="w-height" value="3" step="0.1" inputmode="decimal" oninput="calcWalls()"><span class="unit">м</span></div></div>
+      <div class="field"><label>Товщина стіни</label><div class="irow"><input type="number" id="w-thick" value="0.3" step="0.05" inputmode="decimal" oninput="calcWalls()"><span class="unit">м</span></div></div>
+      <div class="field"><label>Площа вікон і дверей (відрахувати)</label><div class="irow"><input type="number" id="w-openings" value="15" inputmode="decimal" oninput="calcWalls()"><span class="unit">м²</span></div></div>
+      <div class="ctitle" style="margin-top:4px">Ціни</div>
+      <div class="field"><label id="w-mat-label">Газоблок / м³</label><div class="irow"><input type="number" id="w-matprice" value="3200" inputmode="decimal" oninput="calcWalls()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Розчин / м³</label><div class="irow"><input type="number" id="w-mortarprice" value="2200" inputmode="decimal" oninput="calcWalls()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Роботи (загальна сума)</label><div class="irow"><input type="number" id="w-work" value="0" inputmode="decimal" oninput="calcWalls()"><span class="unit">₴</span></div></div>
+    </div>
+    <div class="rgrid">
+      <div class="rc"><div class="rl2">Площа стін</div><div class="rv" id="w-r1">—</div><div class="ru">м²</div></div>
+      <div class="rc"><div class="rl2">Об'єм матеріалу</div><div class="rv" id="w-r2">—</div><div class="ru">м³</div></div>
+      <div class="rc"><div class="rl2">Розчин (+10%)</div><div class="rv" id="w-r3">—</div><div class="ru">м³</div></div>
+      <div class="rc"><div class="rl2">Матеріал (+5%)</div><div class="rv" id="w-r4">—</div><div class="ru">м³</div></div>
+    </div>
+    <div class="calc-total-block">
+      <div class="calc-total-row"><span>Матеріали</span><span id="w-tot-mat">—</span></div>
+      <div class="calc-total-row"><span>Роботи</span><span id="w-tot-work">—</span></div>
+      <div class="calc-total-main"><span>Разом</span><span id="w-tot">—</span></div>
+    </div>
+    <p class="hint">Ціни орієнтовні — змінюйте під свої дані.</p>
+    <button class="btn ba" onclick="calcWallsToStage()">Додати як бюджет етапу</button>
+  </div>
+
+  <!-- ДАХ -->
+  <div id="calc-roof" style="display:none">
+    <div class="card">
+      <div class="ctitle">Тип даху</div>
+      <div class="tgrid">
+        <button class="tbtn on" onclick="setRoofType('двосхилий',this)">Двосхилий</button>
+        <button class="tbtn" onclick="setRoofType('односхилий',this)">Односхилий</button>
+        <button class="tbtn" onclick="setRoofType('вальмовий',this)">Вальмовий</button>
+        <button class="tbtn" onclick="setRoofType('плоский',this)">Плоский</button>
+      </div>
+      <div class="ctitle">Параметри</div>
+      <div class="field"><label>Площа будинку (основа даху)</label><div class="irow"><input type="number" id="r-area" value="100" inputmode="decimal" oninput="calcRoof()"><span class="unit">м²</span></div></div>
+      <div class="field"><label>Кут нахилу</label><div class="irow"><input type="number" id="r-angle" value="30" min="0" max="60" inputmode="decimal" oninput="calcRoof()"><span class="unit">°</span></div></div>
+      <div class="ctitle" style="margin-top:4px">Ціни</div>
+      <div class="field"><label>Покрівля / м²</label><div class="irow"><input type="number" id="r-covprice" value="350" inputmode="decimal" oninput="calcRoof()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Крокви і обрешітка / м²</label><div class="irow"><input type="number" id="r-woodprice" value="280" inputmode="decimal" oninput="calcRoof()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Роботи (загальна сума)</label><div class="irow"><input type="number" id="r-work" value="0" inputmode="decimal" oninput="calcRoof()"><span class="unit">₴</span></div></div>
+    </div>
+    <div class="rgrid">
+      <div class="rc"><div class="rl2">Площа даху</div><div class="rv" id="r-r1">—</div><div class="ru">м²</div></div>
+      <div class="rc"><div class="rl2">З запасом (+10%)</div><div class="rv" id="r-r2">—</div><div class="ru">м²</div></div>
+    </div>
+    <div class="calc-total-block">
+      <div class="calc-total-row"><span>Покрівля</span><span id="r-tot-cov">—</span></div>
+      <div class="calc-total-row"><span>Конструкція</span><span id="r-tot-wood">—</span></div>
+      <div class="calc-total-row"><span>Роботи</span><span id="r-tot-work">—</span></div>
+      <div class="calc-total-main"><span>Разом</span><span id="r-tot">—</span></div>
+    </div>
+    <p class="hint">Ціни орієнтовні — змінюйте під свої дані.</p>
+    <button class="btn ba" onclick="calcRoofToStage()">Додати як бюджет етапу</button>
+  </div>
+
+  <!-- ПІДЛОГА -->
+  <div id="calc-floor" style="display:none">
+    <div class="card">
+      <div class="ctitle">Параметри</div>
+      <div class="field"><label>Площа підлоги</label><div class="irow"><input type="number" id="fl-area" value="100" inputmode="decimal" oninput="calcFloor()"><span class="unit">м²</span></div></div>
+      <div class="field"><label>Товщина стяжки</label><div class="irow"><input type="number" id="fl-thick" value="0.05" step="0.01" inputmode="decimal" oninput="calcFloor()"><span class="unit">м</span></div></div>
+      <div class="ctitle" style="margin-top:4px">Ціни</div>
+      <div class="field"><label>Бетон / м³</label><div class="irow"><input type="number" id="fl-concprice" value="2800" inputmode="decimal" oninput="calcFloor()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Утеплювач / м²</label><div class="irow"><input type="number" id="fl-insprice" value="150" inputmode="decimal" oninput="calcFloor()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Роботи (загальна сума)</label><div class="irow"><input type="number" id="fl-work" value="0" inputmode="decimal" oninput="calcFloor()"><span class="unit">₴</span></div></div>
+    </div>
+    <div class="rgrid">
+      <div class="rc"><div class="rl2">Бетон (+5%)</div><div class="rv" id="fl-r1">—</div><div class="ru">м³</div></div>
+      <div class="rc"><div class="rl2">Утеплювач</div><div class="rv" id="fl-r2">—</div><div class="ru">м²</div></div>
+    </div>
+    <div class="calc-total-block">
+      <div class="calc-total-row"><span>Бетон</span><span id="fl-tot-conc">—</span></div>
+      <div class="calc-total-row"><span>Утеплювач</span><span id="fl-tot-ins">—</span></div>
+      <div class="calc-total-row"><span>Роботи</span><span id="fl-tot-work">—</span></div>
+      <div class="calc-total-main"><span>Разом</span><span id="fl-tot">—</span></div>
+    </div>
+    <p class="hint">Ціни орієнтовні — змінюйте під свої дані.</p>
+    <button class="btn ba" onclick="calcFloorToStage()">Додати як бюджет етапу</button>
+  </div>
+
+  <!-- ВІКНА І ДВЕРІ -->
+  <div id="calc-windows" style="display:none">
+    <div class="card">
+      <div class="ctitle">Параметри</div>
+      <div class="field"><label>Кількість вікон</label><div class="irow"><input type="number" id="win-count" value="8" inputmode="decimal" oninput="calcWindows()"><span class="unit">шт</span></div></div>
+      <div class="field"><label>Середня площа вікна</label><div class="irow"><input type="number" id="win-area" value="1.5" step="0.1" inputmode="decimal" oninput="calcWindows()"><span class="unit">м²</span></div></div>
+      <div class="field"><label>Кількість дверей (вхідні)</label><div class="irow"><input type="number" id="door-ext" value="1" inputmode="decimal" oninput="calcWindows()"><span class="unit">шт</span></div></div>
+      <div class="field"><label>Кількість дверей (міжкімнатні)</label><div class="irow"><input type="number" id="door-int" value="6" inputmode="decimal" oninput="calcWindows()"><span class="unit">шт</span></div></div>
+      <div class="ctitle" style="margin-top:4px">Ціни</div>
+      <div class="field"><label>Вікно / м²</label><div class="irow"><input type="number" id="win-price" value="4500" inputmode="decimal" oninput="calcWindows()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Вхідні двері / шт</label><div class="irow"><input type="number" id="door-ext-price" value="12000" inputmode="decimal" oninput="calcWindows()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Міжкімнатні двері / шт</label><div class="irow"><input type="number" id="door-int-price" value="4000" inputmode="decimal" oninput="calcWindows()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Монтаж (загальна сума)</label><div class="irow"><input type="number" id="win-work" value="0" inputmode="decimal" oninput="calcWindows()"><span class="unit">₴</span></div></div>
+    </div>
+    <div class="calc-total-block">
+      <div class="calc-total-row"><span>Вікна</span><span id="win-tot-win">—</span></div>
+      <div class="calc-total-row"><span>Вхідні двері</span><span id="win-tot-ext">—</span></div>
+      <div class="calc-total-row"><span>Міжкімнатні двері</span><span id="win-tot-int">—</span></div>
+      <div class="calc-total-row"><span>Монтаж</span><span id="win-tot-work">—</span></div>
+      <div class="calc-total-main"><span>Разом</span><span id="win-tot">—</span></div>
+    </div>
+    <p class="hint">Ціни орієнтовні — змінюйте під свої дані.</p>
+    <button class="btn ba" onclick="calcWindowsToStage()">Додати як бюджет етапу</button>
+  </div>
+
+  <!-- ПЛИТКА -->
+  <div id="calc-tile" style="display:none">
+    <div class="card">
+      <div class="ctitle">Параметри</div>
+      <div class="field"><label>Площа укладання</label><div class="irow"><input type="number" id="ti-area" value="50" inputmode="decimal" oninput="calcTile()"><span class="unit">м²</span></div></div>
+      <div class="field"><label>Розмір плитки</label>
+        <div class="tgrid" style="margin-top:6px">
+          <button class="tbtn on" onclick="setTileSize(0.09,this)">30×30</button>
+          <button class="tbtn" onclick="setTileSize(0.16,this)">40×40</button>
+          <button class="tbtn" onclick="setTileSize(0.25,this)">50×50</button>
+          <button class="tbtn" onclick="setTileSize(0.36,this)">60×60</button>
+        </div>
+      </div>
+      <div class="ctitle" style="margin-top:4px">Ціни</div>
+      <div class="field"><label>Плитка / м²</label><div class="irow"><input type="number" id="ti-price" value="600" inputmode="decimal" oninput="calcTile()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Клей / м²</label><div class="irow"><input type="number" id="ti-glueprice" value="80" inputmode="decimal" oninput="calcTile()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Затирка / м²</label><div class="irow"><input type="number" id="ti-groutprice" value="40" inputmode="decimal" oninput="calcTile()"><span class="unit">₴</span></div></div>
+      <div class="field"><label>Роботи / м²</label><div class="irow"><input type="number" id="ti-workprice" value="250" inputmode="decimal" oninput="calcTile()"><span class="unit">₴</span></div></div>
+    </div>
+    <div class="rgrid">
+      <div class="rc"><div class="rl2">Плитки (+10%)</div><div class="rv" id="ti-r1">—</div><div class="ru">м²</div></div>
+      <div class="rc"><div class="rl2">Кількість плиток</div><div class="rv" id="ti-r2">—</div><div class="ru">шт</div></div>
+    </div>
+    <div class="calc-total-block">
+      <div class="calc-total-row"><span>Плитка</span><span id="ti-tot-tile">—</span></div>
+      <div class="calc-total-row"><span>Клей</span><span id="ti-tot-glue">—</span></div>
+      <div class="calc-total-row"><span>Затирка</span><span id="ti-tot-grout">—</span></div>
+      <div class="calc-total-row"><span>Роботи</span><span id="ti-tot-work">—</span></div>
+      <div class="calc-total-main"><span>Разом</span><span id="ti-tot">—</span></div>
+    </div>
+    <p class="hint">Ціни орієнтовні — змінюйте під свої дані.</p>
+    <button class="btn ba" onclick="calcTileToStage()">Додати як бюджет етапу</button>
+  </div>
+
+</div>
+</div>
+
+<!-- НАЛАШТУВАННЯ -->
+<div id="scr-settings" class="scr">
+<div class="wrap">
+  <div class="card">
+    <div class="ctitle">Google Sheets підключення</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6">Після підключення всі витрати автоматично зберігаються в таблицю, а замовник бачить зміни онлайн.</p>
+    <div class="field"><label>Apps Script URL</label><div class="irow"><input type="url" id="su" placeholder="https://script.google.com/macros/s/..." style="font-size:13px"></div></div>
+    <button class="btn bn bsm" onclick="saveUrl()">Зберегти і перевірити</button>
+    <div class="divhr">як отримати URL</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.9">
+      <b style="color:var(--text)">1.</b> Google Sheets → Розширення → Apps Script<br>
+      <b style="color:var(--text)">2.</b> Вставте код (кнопка нижче)<br>
+      <b style="color:var(--text)">3.</b> Розгорнути → Нове розгортання → Веб-застосунок<br>
+      <b style="color:var(--text)">4.</b> Доступ: Будь-хто → скопіюйте URL
+    </div>
+    <button class="btn bo bsm" style="margin-top:10px" onclick="copyScript()">Скопіювати код скрипту</button>
+  </div>
+  <div class="card">
+    <div class="ctitle">Проєкт</div>
+    <div class="field"><label>Назва об'єкта</label><div class="irow"><input type="text" id="pn" placeholder="Котедж Іваненка"></div></div>
+    <div class="field"><label>ID проєкту (латиницею, без пробілів)</label><div class="irow"><input type="text" id="pi" placeholder="ivanenko-2024" style="font-size:13px"></div></div>
+    <button class="btn bn bsm" onclick="saveProj()">Зберегти</button>
+  </div>
+  <div class="card">
+    <div class="ctitle">Посилання для замовника</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:10px;line-height:1.6">Замовник відкриє це посилання і побачить живу смету — всі зміни в реальному часі.</p>
+    <div class="slink" id="cl-display">Налаштуйте Apps Script URL і ID проєкту</div>
+    <button class="btn ba bsm" onclick="copyLink()">Скопіювати посилання</button>
+  </div>
+  <div class="card">
+    <div class="ctitle">Дані</div>
+    <button class="btn bo bsm" style="margin-bottom:8px" onclick="exportJ()">Вивантажити JSON</button>
+    <button class="btn bo bsm" style="color:var(--red);border-color:var(--red)" onclick="clearAll()">Очистити всі дані</button>
+  </div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="m-stage" onclick="closeModal('m-stage')">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt">Новий етап</div>
+    <div class="field"><label>Назва</label><div class="irow"><input type="text" id="mn" placeholder="Фундамент, Коробка, Дах..."></div></div>
+    <div class="field"><label>Бюджет від замовника</label><div class="irow"><input type="number" id="mb" placeholder="300000" inputmode="decimal"><span class="unit">₴</span></div></div>
+    <button class="btn ba" onclick="addStage()">Додати</button>
+    <button class="btn bo" onclick="closeModal('m-stage')">Скасувати</button>
+  </div>
+</div>
+
+<div class="mo" id="m-close" onclick="closeModal('m-close')">
+  <div class="mdl" onclick="event.stopPropagation()">
+    <div class="mh"></div>
+    <div class="mt" id="mc-title">Закрити етап</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.6;white-space:pre-line" id="mc-text"></p>
+    <button class="btn bg" onclick="doCloseStage()">Закрити і надіслати замовнику</button>
+    <button class="btn bo" onclick="closeModal('m-close')">Скасувати</button>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+</div><!-- /main-app -->
+
+<script>
+var SCRIPT_CODE = `function doGet(e){return handle(e)}
+function doPost(e){return handle(e)}
+function handle(e){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  var act=(e.parameter&&e.parameter.action)||'ping';
+  var pid=(e.parameter&&e.parameter.pid)||'default';
+  var mime=ContentService.MimeType.JSON;
+  if(act==='ping') return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  if(act==='addExpense'){
+    var sh=getSheet(ss,pid+'_витрати');
+    var d=JSON.parse(e.postData.contents);
+    if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['Дата','Назва','Планова','Фактична','Різниця','Етап','Категорія','Коментар']);
+    sh.appendRow([d.date,d.name,d.planned,d.actual,d.actual-d.planned,d.stage,d.cat,d.comment||'']);
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='addStage'){
+    var sh=getSheet(ss,pid+'_етапи');
+    var d=JSON.parse(e.postData.contents);
+    if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['ID','Назва','Бюджет','Статус','Дата']);
+    sh.appendRow([d.id,d.name,d.budget,'active',new Date().toLocaleDateString('uk-UA')]);
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='closeStage'){
+    var sh=getSheet(ss,pid+'_етапи');
+    var d=JSON.parse(e.postData.contents);
+    var rows=sh.getDataRange().getValues();
+    for(var i=1;i<rows.length;i++){if(rows[i][0]==d.id){sh.getRange(i+1,4).setValue('closed');break;}}
+    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+  }
+  if(act==='getData'){
+    var es=getSheet(ss,pid+'_витрати');
+    var ss2=getSheet(ss,pid+'_етапи');
+    var exp=es.getLastRow()>1?es.getRange(2,1,es.getLastRow()-1,8).getValues():[];
+    var sta=ss2.getLastRow()>1?ss2.getRange(2,1,ss2.getLastRow()-1,5).getValues():[];
+    // Фільтруємо скасування — якщо коментар 'скасування' то це від'ємний рядок
+    // Показуємо всі рядки але з правильними сумами
+    var expenses=exp.map(function(r){
+      return {date:r[0],name:r[1],planned:r[2],actual:r[3],delta:r[4],stage:r[5],cat:r[6],comment:r[7],cancelled:r[7]==='скасування'};
+    });
+    var res={
+      expenses:expenses,
+      stages:sta.map(function(r){return{id:r[0],name:r[1],budget:r[2],status:r[3]};})
+    };
+    return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(mime);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:false})).setMimeType(mime);
+}
+function getSheet(ss,name){var s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);return s;}`;
+
+// STATE
+var S={url:'',pid:'',pname:'',stages:[],expenses:[],pending:false};
+
+function load(){
+  try{var d=JSON.parse(localStorage.getItem('pb2')||'{}');Object.assign(S,d);}catch(e){}
+  if(document.getElementById('su')) document.getElementById('su').value=S.url||'';
+  if(document.getElementById('pn')) document.getElementById('pn').value=S.pname||'';
+  if(document.getElementById('pi')) document.getElementById('pi').value=S.pid||'';
+  updSync();updLink();
+}
+function save(){localStorage.setItem('pb2',JSON.stringify(S));}
+function fmt(v){return Math.round(v).toLocaleString('uk-UA');}
+function toast(msg,dur){var t=document.getElementById('toast-el');t.textContent=msg;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('on'),dur||2800);}
+
+function go(name){
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('scr-'+name).classList.add('on');
+  var m={project:0,expense:1,calc:2,settings:3};
+  document.querySelectorAll('.tab')[m[name]].classList.add('on');
+  if(name==='project') renderProject();
+  if(name==='expense'){renderExpList();fillStageSelect();renderPlannedItems();}
+  if(name==='calc') runCalc();
+  window.scrollTo(0,0);
+}
+function openModal(id){document.getElementById(id).classList.add('on');}
+function closeModal(id){document.getElementById(id).classList.remove('on');}
+
+function updSync(){
+  var el=document.getElementById('sync-el');
+  el.className='sync '+(S.url?'s-ok':'s-no');
+  el.textContent=S.url?'● онлайн':'● офлайн';
+}
+function updLink(){
+  var el=document.getElementById('cl-display');
+  if(!el) return;
+  if(S.url&&S.pid){
+    var base=window.location.href.replace(/[^\/]*$/, '');
+    el.textContent=base+'index.html?url='+encodeURIComponent(S.url)+'&pid='+encodeURIComponent(S.pid)+'&name='+encodeURIComponent(S.pname||'');
+  }else{el.textContent='Налаштуйте Apps Script URL і ID проєкту';}
+}
+
+async function saveUrl(){
+  S.url=document.getElementById('su').value.trim();save();
+  if(!S.url){toast('Введіть URL');return;}
+  toast('Перевіряємо...',5000);
+  try{
+    var r=await fetch(S.url+'?action=ping');
+    var j=await r.json();
+    if(j.ok){toast('Підключено! ✓');updSync();}else{toast('Помилка відповіді');}
+  }catch(e){toast('Не вдалось підключитись');}
+}
+function saveProj(){
+  S.pname=document.getElementById('pn').value.trim();
+  S.pid=document.getElementById('pi').value.trim().toLowerCase().replace(/\s+/g,'-');
+  save();updLink();toast('Збережено!');
+}
+function copyLink(){
+  if(!S.url||!S.pid){toast('Спочатку налаштуйте підключення');go('settings');return;}
+  var base=window.location.href.replace(/[^\/]*$/, '');
+  var link=base+'index.html?url='+encodeURIComponent(S.url)+'&pid='+encodeURIComponent(S.pid)+'&name='+encodeURIComponent(S.pname||'');
+  navigator.clipboard.writeText(link).then(()=>toast('Посилання скопійовано!')).catch(()=>prompt('Посилання:',link));
+}
+function copyScript(){
+  navigator.clipboard.writeText(SCRIPT_CODE).then(()=>toast('Код скопійовано!')).catch(()=>prompt('Код:',SCRIPT_CODE));
+}
+
+async function sync(action,data){
+  if(!S.url) return false;
+  try{
+    var r=await fetch(S.url+'?action='+action+'&pid='+encodeURIComponent(S.pid||'default'),{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});
+    var j=await r.json();return j.ok;
+  }catch(e){return false;}
+}
+
+// STAGES
+async function addStage(){
+  var name=document.getElementById('mn').value.trim();
+  var budget=parseFloat(document.getElementById('mb').value)||0;
+  if(!name||!budget){toast('Заповніть назву і бюджет');return;}
+  var stage={id:Date.now(),name,budget,spent:0,status:'active'};
+  S.stages.push(stage);
+
+  // Якщо є планові позиції з калькулятора — додаємо їх як заплановані витрати
+  var items=window._calcItems||[];
+  var today=new Date().toLocaleDateString('uk-UA');
+  items.forEach(function(item){
+    S.plannedItems=S.plannedItems||[];
+    S.plannedItems.push({
+      id:String(Date.now()+Math.random()),
+      stageId:stage.id,
+      stageName:name,
+      name:item.name,
+      planned:item.planned,
+      cat:item.cat,
+      paid:false,
+      date:today
+    });
+  });
+  window._calcItems=[];
+
+  save();
+  closeModal('m-stage');
+  document.getElementById('mn').value='';document.getElementById('mb').value='';
+  renderProject();fillStageSelect();
+  if(items.length){
+    toast('Етап додано! '+items.length+' позицій готові до оплати.');
+  } else {
+    toast('Етап додано!');
+  }
+  sync('addStage',{id:stage.id,name:stage.name,budget:stage.budget});
+}
+
+var _closingId=null;
+function showCloseModal(id){
+  _closingId=id;
+  var s=S.stages.find(x=>x.id===id);if(!s) return;
+  var left=s.budget-s.spent;
+  document.getElementById('mc-title').textContent='Закрити «'+s.name+'»';
+  document.getElementById('mc-text').textContent='Бюджет: '+fmt(s.budget)+' ₴\nВитрачено: '+fmt(s.spent)+' ₴\n'+(left>=0?'Економія: '+fmt(left)+' ₴':'Перевитрата: '+fmt(Math.abs(left))+' ₴')+'\n\nЗамовник отримає фінальний звіт.';
+  openModal('m-close');
+}
+async function doCloseStage(){
+  if(!_closingId) return;
+  var s=S.stages.find(x=>x.id===_closingId);
+  if(s){s.status='closed';S.pending=true;}
+  save();closeModal('m-close');renderProject();
+  toast('Закрито. Надішліть посилання замовнику.');
+  sync('closeStage',{id:_closingId});
+  _closingId=null;
+}
+
+function renderProject(){
+  var tb=S.stages.reduce((a,s)=>a+s.budget,0);
+  var ts=S.stages.reduce((a,s)=>a+s.spent,0);
+  var today=new Date().toLocaleDateString('uk-UA');
+  var tod=S.expenses.filter(e=>e.date===today).reduce((a,e)=>a+e.actual,0);
+  document.getElementById('h-rem').textContent=fmt(tb-ts)+' ₴';
+  document.getElementById('h-bud').textContent=fmt(tb)+' ₴';
+  document.getElementById('h-spe').textContent=fmt(ts)+' ₴';
+  document.getElementById('h-tod').textContent=fmt(tod)+' ₴';
+  document.getElementById('appr-block').style.display=S.pending?'block':'none';
+  var el=document.getElementById('stages-el');
+  if(!S.stages.length){el.innerHTML='<div class="empty"><div class="ic">🏗️</div><p>Немає жодного етапу.<br>Додайте перший нижче.</p></div>';return;}
+  el.innerHTML=S.stages.map(function(s){
+    var pct=s.budget>0?Math.min(100,Math.round(s.spent/s.budget*100)):0;
+    var left=s.budget-s.spent;
+    var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+    var sc2=s.status==='closed'?'st-d':'st-a';
+    var sl=s.status==='closed'?'Закрито':'Активний';
+    var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ економія</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+    var exps=S.expenses.filter(e=>e.stageId===s.id).slice(-3).reverse();
+    var exh=exps.map(function(e){
+      var d=e.actual-e.planned;
+      var dc=d>0?'neg':d<0?'pos':'neu';
+      return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+(e.comment?' · '+e.comment:'')+'</div></div><div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'+':'')+fmt(d)+' ₴ від плану':'за планом')+'</div></div></div>';
+    }).join('');
+    var act=s.status==='closed'
+      ?'<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">Закрито · чекаємо підтвердження замовника</div>'
+      :'<div class="scact"><button class="sab pa" onclick="go(\'expense\')">+ Витрата</button><button class="sab pg" onclick="showCloseModal('+s.id+')">Закрити етап</button></div>';
+    return '<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(s.budget)+' ₴</span> · Витрачено: <span>'+fmt(s.spent)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin:10px 0">'+exh+'</div>':'')+act+'</div>';
+  }).join('');
+}
+
+// EXPENSES
+function fillStageSelect(){
+  var sel=document.getElementById('es');if(!sel) return;
+  sel.innerHTML='<option value="">— Оберіть етап —</option>'+S.stages.filter(s=>s.status==='active').map(s=>'<option value="'+s.id+'">'+s.name+'</option>').join('');
+}
+
+function renderPlannedItems(){
+  var items=(S.plannedItems||[]).filter(i=>!i.paid);
+  var block=document.getElementById('planned-items-block');
+  var list=document.getElementById('planned-items-list');
+  if(!block||!list) return;
+  if(!items.length){block.style.display='none';return;}
+  block.style.display='block';
+  list.innerHTML=items.map(function(item){
+    return '<div class="ci" style="margin-bottom:6px;border:1.5px solid var(--accent);cursor:pointer" onclick="prefillExpense(\''+item.id+'\')">' +
+      '<div><div class="cn">'+item.name+'</div><div class="cm">'+item.stageName+' · '+item.cat+'</div></div>' +
+      '<div class="cr"><div class="ca" style="color:var(--accent)">'+fmt(item.planned)+' ₴</div><div class="ccat">план · натисніть оплатити</div></div>' +
+      '</div>';
+  }).join('');
+}
+
+function prefillExpense(itemId){
+  var item=(S.plannedItems||[]).find(function(i){return String(i.id)===String(itemId);});
+  if(!item) return;
+  document.getElementById('en').value=item.name;
+  document.getElementById('ep').value=item.planned;
+  document.getElementById('ea').value='';
+  var sel=document.getElementById('es');
+  if(sel){
+    sel.value=item.stageId;
+    if(!sel.value) {
+      for(var i=0;i<sel.options.length;i++){
+        if(sel.options[i].text===item.stageName){sel.selectedIndex=i;break;}
+      }
+    }
+  }
+  var catSel=document.getElementById('ec');
+  if(catSel) catSel.value=item.cat;
+  window._prefillItemId=itemId;
+  document.getElementById('ep').dispatchEvent(new Event('input'));
+  document.getElementById('ea').focus();
+  document.querySelector('.card').scrollIntoView({behavior:'smooth'});
+  toast('Введіть фактичну суму ↓');
+}
+
+function toggleExpDetails(){
+  var d=document.getElementById('exp-details');
+  var a=document.getElementById('exp-details-arrow');
+  if(d.style.display==='none'){d.style.display='block';a.textContent='▼';}
+  else{d.style.display='none';a.textContent='▶';}
+}
+
+document.addEventListener('input',function(e){
+  if(e.target.id==='ep'||e.target.id==='ea'){
+    var p=parseFloat(document.getElementById('ep').value)||0;
+    var a=parseFloat(document.getElementById('ea').value)||0;
+    if(p>0&&a>0){
+      var d=a-p;var bl=document.getElementById('delta-bl');var bv=document.getElementById('delta-val');var bt=document.getElementById('delta-txt');
+      bl.style.display='block';
+      if(d>0){bv.className='db do';bv.textContent='▲ +'+fmt(d)+' ₴ дорожче ніж план';bt.textContent='Замовник побачить різницю і коментар';}
+      else if(d<0){bv.className='db du';bv.textContent='▼ '+fmt(Math.abs(d))+' ₴ дешевше ніж план';bt.textContent='Економія — замовник також побачить';}
+      else{bv.className='db dn';bv.textContent='✓ Точно за планом';bt.textContent='';}
+    } else {
+      document.getElementById('delta-bl').style.display='none';
+    }
+  }
+});
+
+async function addExp(){
+  var name=document.getElementById('en').value.trim();
+  var actual=parseFloat(document.getElementById('ea').value)||0;
+  var planned=parseFloat(document.getElementById('ep').value)||0;
+  var sid=parseInt(document.getElementById('es').value);
+  var cat=document.getElementById('ec').value;
+  var comment=document.getElementById('ecm').value.trim();
+  if(!name){toast('Введіть що купили');return;}
+  if(!actual){toast('Введіть суму');return;}
+  if(!sid){toast('Оберіть етап');return;}
+  var delta=planned>0?actual-planned:0;
+  var exp={id:Date.now(),name,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta};
+  S.expenses.push(exp);
+  var stage=S.stages.find(s=>s.id===sid);
+  if(stage) stage.spent+=actual;
+  if(planned>0&&Math.abs(delta)>0) S.pending=true;
+  if(window._prefillItemId){
+    var pi=(S.plannedItems||[]).find(function(i){return String(i.id)===String(window._prefillItemId);});
+    if(pi) pi.paid=true;
+    window._prefillItemId=null;
+  }
+  save();
+  document.getElementById('en').value='';
+  document.getElementById('ep').value='';
+  document.getElementById('ea').value='';
+  document.getElementById('ecm').value='';
+  document.getElementById('delta-bl').style.display='none';
+  document.getElementById('exp-details').style.display='none';
+  document.getElementById('exp-details-arrow').textContent='▶';
+  renderExpList();renderPlannedItems();renderProject();toast('Зафіксовано!');
+  var ok=await sync('addExpense',{date:exp.date,name:exp.name,planned:exp.planned,actual:exp.actual,stage:stage?stage.name:'',cat:exp.cat,comment:exp.comment});
+  if(ok) toast('Збережено ✓');
+}
+
+function deleteExp(id){
+  if(!confirm('Видалити цю витрату?')) return;
+  var exp=S.expenses.find(function(e){return e.id===id;});
+  if(!exp) return;
+  var stage=S.stages.find(function(s){return s.id===exp.stageId;});
+  if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
+  S.expenses=S.expenses.filter(function(e){return e.id!==id;});
+  save();renderExpList();renderProject();toast('Видалено');
+}
+
+function cancelExpense(id){
+  var exp=S.expenses.find(function(e){return e.id===id;});
+  if(!exp) return;
+  if(exp.cancelled){toast('Вже скасовано');return;}
+  if(!confirm('Скасувати витрату «'+exp.name+'»?\nВ таблицю додасться запис скасування.')) return;
+  // Позначаємо як скасовану
+  exp.cancelled=true;
+  // Зменшуємо витрачено по етапу
+  var stage=S.stages.find(function(s){return s.id===exp.stageId;});
+  if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
+  // Додаємо запис скасування в Google Sheets
+  sync('addExpense',{
+    date:new Date().toLocaleDateString('uk-UA'),
+    name:exp.name,
+    planned:0,
+    actual:-exp.actual,
+    stage:stage?stage.name:'',
+    cat:exp.cat,
+    comment:'скасування'
+  });
+  save();renderExpList();renderProject();
+  toast('Скасовано — таблиця оновлена');
+}
+
+function renderExpList(){
+  var el=document.getElementById('exp-list');if(!el) return;
+  if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.<br>Додайте першу витрату вище.</p></div>';return;}
+  el.innerHTML=[...S.expenses].reverse().slice(0,30).map(function(e){
+    var s=S.stages.find(function(x){return x.id===e.stageId;});
+    var deltaHtml='';
+    if(e.planned>0){
+      var d=e.delta||0;
+      var dc=d>0?'neg':d<0?'pos':'neu';
+      deltaHtml='<div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div>';
+    }
+    var cancelledStyle=e.cancelled?'opacity:.4;text-decoration:line-through;':'';
+    var cancelBtn=!e.cancelled?'<button onclick="cancelExpense('+e.id+')" style="flex-shrink:0;height:28px;padding:0 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;color:var(--red);cursor:pointer;white-space:nowrap">Скасувати</button>':'<span style="font-size:11px;color:var(--t3)">Скасовано</span>';
+    return '<div class="ci" style="'+cancelledStyle+'align-items:flex-start;flex-wrap:wrap;gap:6px">'+
+      '<div style="flex:1;min-width:0"><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+
+      '<div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div>'+deltaHtml+'</div>'+
+      cancelBtn+
+      '</div></div>';
+  }).join('');
+}
+
+// ── CALC SELECTOR ──
+function showCalc(name,el){
+  ['fund','walls','roof','floor','windows','tile'].forEach(function(c){document.getElementById('calc-'+c).style.display=c===name?'block':'none';});
+  document.querySelectorAll('.calc-sel-btn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  if(name==='fund') runCalc();
+  if(name==='walls') calcWalls();
+  if(name==='roof') calcRoof();
+  if(name==='floor') calcFloor();
+  if(name==='windows') calcWindows();
+  if(name==='tile') calcTile();
+}
+
+// ── WALLS ──
+var wallType='газоблок';
+function setWallType(t,el){wallType=t;document.querySelectorAll('#calc-walls .tbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');var lbl=document.getElementById('w-mat-label');if(lbl)lbl.textContent=t.charAt(0).toUpperCase()+t.slice(1)+' / м³';calcWalls();}
+function calcWalls(){
+  var perim=nc2('w-perim'),height=nc2('w-height'),thick=nc2('w-thick'),openings=nc2('w-openings'),matprice=nc2('w-matprice'),mortarprice=nc2('w-mortarprice'),work=nc2('w-work');
+  var wallArea=Math.max(0,perim*height-openings);var vol=wallArea*thick;var volPlus=vol*1.05;var mortar=vol*0.1*1.1;
+  var totMat=Math.round(volPlus*matprice+mortar*mortarprice);var tot=totMat+Math.round(work);
+  set('w-r1',wallArea.toFixed(1));set('w-r2',vol.toFixed(2));set('w-r3',mortar.toFixed(2));set('w-r4',volPlus.toFixed(2));
+  set('w-tot-mat',fmt(totMat)+' ₴');set('w-tot-work',fmt(work)+' ₴');set('w-tot',fmt(tot)+' ₴');window._wallsTotal=tot;
+}
+function calcWallsToStage(){if(!window._wallsTotal)return;document.getElementById('mb').value=window._wallsTotal;document.getElementById('mn').value='Коробка (стіни)';openModal('m-stage');}
+
+// ── ROOF ──
+var roofType='двосхилий';
+function setRoofType(t,el){roofType=t;document.querySelectorAll('#calc-roof .tbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');calcRoof();}
+function calcRoof(){
+  var area=nc2('r-area'),angle=nc2('r-angle'),covprice=nc2('r-covprice'),woodprice=nc2('r-woodprice'),work=nc2('r-work');
+  var coef=roofType==='плоский'?1:1/Math.cos(angle*Math.PI/180)*(roofType==='вальмовий'?1.4:roofType==='односхилий'?1:1.1);
+  var roofArea=area*coef;var roofPlus=roofArea*1.1;
+  var totCov=Math.round(roofPlus*covprice);var totWood=Math.round(roofPlus*woodprice);var tot=totCov+totWood+Math.round(work);
+  set('r-r1',roofArea.toFixed(1));set('r-r2',roofPlus.toFixed(1));
+  set('r-tot-cov',fmt(totCov)+' ₴');set('r-tot-wood',fmt(totWood)+' ₴');set('r-tot-work',fmt(Math.round(work))+' ₴');set('r-tot',fmt(tot)+' ₴');window._roofTotal=tot;
+}
+function calcRoofToStage(){if(!window._roofTotal)return;document.getElementById('mb').value=window._roofTotal;document.getElementById('mn').value='Дах';openModal('m-stage');}
+
+// ── FLOOR ──
+function calcFloor(){
+  var area=nc2('fl-area'),thick=nc2('fl-thick'),concprice=nc2('fl-concprice'),insprice=nc2('fl-insprice'),work=nc2('fl-work');
+  var vol=area*thick*1.05;var totConc=Math.round(vol*concprice);var totIns=Math.round(area*insprice);var tot=totConc+totIns+Math.round(work);
+  set('fl-r1',vol.toFixed(2));set('fl-r2',area.toFixed(1));
+  set('fl-tot-conc',fmt(totConc)+' ₴');set('fl-tot-ins',fmt(totIns)+' ₴');set('fl-tot-work',fmt(Math.round(work))+' ₴');set('fl-tot',fmt(tot)+' ₴');window._floorTotal=tot;
+}
+function calcFloorToStage(){if(!window._floorTotal)return;document.getElementById('mb').value=window._floorTotal;document.getElementById('mn').value='Підлога / стяжка';openModal('m-stage');}
+
+// ── WINDOWS ──
+function calcWindows(){
+  var winCount=nc2('win-count'),winArea=nc2('win-area'),doorExt=nc2('door-ext'),doorInt=nc2('door-int');
+  var winPrice=nc2('win-price'),doorExtPrice=nc2('door-ext-price'),doorIntPrice=nc2('door-int-price'),work=nc2('win-work');
+  var totWin=Math.round(winCount*winArea*winPrice);var totExt=Math.round(doorExt*doorExtPrice);var totInt=Math.round(doorInt*doorIntPrice);var tot=totWin+totExt+totInt+Math.round(work);
+  set('win-tot-win',fmt(totWin)+' ₴');set('win-tot-ext',fmt(totExt)+' ₴');set('win-tot-int',fmt(totInt)+' ₴');set('win-tot-work',fmt(Math.round(work))+' ₴');set('win-tot',fmt(tot)+' ₴');window._windowsTotal=tot;
+}
+function calcWindowsToStage(){if(!window._windowsTotal)return;document.getElementById('mb').value=window._windowsTotal;document.getElementById('mn').value='Вікна та двері';openModal('m-stage');}
+
+// ── TILE ──
+var tileSize=0.09;
+function setTileSize(s,el){tileSize=s;document.querySelectorAll('#calc-tile .tbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');calcTile();}
+function calcTile(){
+  var area=nc2('ti-area'),price=nc2('ti-price'),glueprice=nc2('ti-glueprice'),groutprice=nc2('ti-groutprice'),workprice=nc2('ti-workprice');
+  var areaPlus=area*1.1;var count=Math.ceil(areaPlus/tileSize);
+  var totTile=Math.round(areaPlus*price);var totGlue=Math.round(area*glueprice);var totGrout=Math.round(area*groutprice);var totWork=Math.round(area*workprice);var tot=totTile+totGlue+totGrout+totWork;
+  set('ti-r1',areaPlus.toFixed(1));set('ti-r2',String(count));
+  set('ti-tot-tile',fmt(totTile)+' ₴');set('ti-tot-glue',fmt(totGlue)+' ₴');set('ti-tot-grout',fmt(totGrout)+' ₴');set('ti-tot-work',fmt(totWork)+' ₴');set('ti-tot',fmt(tot)+' ₴');window._tileTotal=tot;
+}
+function calcTileToStage(){if(!window._tileTotal)return;document.getElementById('mb').value=window._tileTotal;document.getElementById('mn').value='Плитка';openModal('m-stage');}
+
+function nc2(id){var el=document.getElementById(id);return el?parseFloat(el.value)||0:0;}
+function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+
+// CALC
+var ct='стрічковий';
+function setCT(t,el){ct=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));el.classList.add('on');document.getElementById('cwl').textContent=t==='плитний'?'Товщина плити':t==='стовпчастий'?'Діаметр стовпа':'Ширина стрічки';document.getElementById('cpl').textContent=t==='стовпчастий'?'Кількість стовпів':t==='плитний'?'Сторона плити':'Периметр';runCalc();}
+function nc(id){return parseFloat(document.getElementById(id).value)||0;}
+function runCalc(){
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
+  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp=v*1.05,arm=v*100,form=p*d*2,mat=vp*pc+arm*pa,tot=mat+work+del;
+  document.getElementById('cr1').textContent=vp.toFixed(1);
+  document.getElementById('cr2').textContent=fmt(arm);
+  document.getElementById('cr3').textContent=form.toFixed(1);
+  document.getElementById('cr4').textContent=v.toFixed(1);
+  document.getElementById('ctot-mat').textContent=fmt(mat)+' ₴';
+  document.getElementById('ctot-work').textContent=fmt(work)+' ₴';
+  document.getElementById('ctot-del').textContent=fmt(del)+' ₴';
+  document.getElementById('ctot').textContent=fmt(tot)+' ₴';
+  window._ctot=Math.round(tot);
+}
+function calcToStage(){
+  if(!window._ctot) return;
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
+  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp=v*1.05,arm=v*100,mat=vp*pc+arm*pa;
+
+  // Зберігаємо планові позиції для подальшого використання
+  window._calcItems=[];
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc2=nc('cpc'),pa2=nc('cpa'),work2=nc('cwork'),del2=nc('cdel');
+  var v2=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp2=v2*1.05,arm2=v2*100;
+  var costConcrete=Math.round(vp2*pc2);
+  var costArm=Math.round(arm2*pa2);
+  if(costConcrete>0) window._calcItems.push({name:'Бетон '+vp2.toFixed(1)+' м³',planned:costConcrete,cat:'Матеріали'});
+  if(costArm>0) window._calcItems.push({name:'Арматура '+Math.round(arm2)+' кг',planned:costArm,cat:'Матеріали'});
+  if(work2>0) window._calcItems.push({name:'Роботи',planned:Math.round(work2),cat:'Роботи'});
+  if(del2>0) window._calcItems.push({name:'Доставка',planned:Math.round(del2),cat:'Транспорт'});
+
+  document.getElementById('mb').value=window._ctot;
+  document.getElementById('mn').value='Фундамент ('+ct+')';
+  openModal('m-stage');
+}
+
+function exportJ(){
+  var b=new Blob([JSON.stringify({date:new Date().toISOString(),project:S.pname,stages:S.stages,expenses:S.expenses},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='prorab-'+(S.pid||'export')+'-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
+function clearAll(){if(!confirm('Видалити дані проєкту? Налаштування підключення збережуться.')) return;S.stages=[];S.expenses=[];S.plannedItems=[];S.pending=false;save();renderProject();toast('Дані проєкту видалено. Налаштування збережені.');}
+
+load();renderProject();runCalc();
+
+// Якщо відкрито як сторінка замовника — показуємо клієнтський вид
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var clientUrl=params.get('url');
+  var clientPid=params.get('pid');
+  var clientName=params.get('name');
+  if(clientUrl&&clientPid){
+    document.querySelector('.hdr').innerHTML='<div class="logo">Прораб<span>.</span>Бюджет</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px" id="proj-title">Завантаження...</div>';
+    document.querySelector('.nav').style.display='none';
+    document.querySelectorAll('.scr').forEach(s=>s.style.display='none');
+    var wrap=document.createElement('div');
+    wrap.className='wrap';
+    wrap.id='client-wrap';
+    wrap.innerHTML='<div id="client-content"><div style="text-align:center;padding:48px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:12px">⏳</div><p style="font-size:14px">Завантажуємо дані...</p></div></div>';
+    document.body.appendChild(wrap);
+    if(clientName) document.getElementById('proj-title').textContent=decodeURIComponent(clientName);
+    document.title='Кошторис — '+(clientName?decodeURIComponent(clientName):'Об\'єкт');
+    function loadClientData(){
+      fetch(clientUrl+'?action=getData&pid='+encodeURIComponent(clientPid))
+        .then(function(r){return r.json();})
+        .then(function(data){renderClient(data);})
+        .catch(function(){
+          document.getElementById('client-content').innerHTML='<div style="background:var(--rl);border:1px solid var(--red);border-radius:var(--r);padding:16px;color:var(--red);font-size:13px;line-height:1.6;margin-bottom:12px">Не вдалось завантажити дані. Перевірте інтернет.</div><button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2)">Оновити</button>';
+        });
+    }
+    window.loadClientData=loadClientData;
+    function renderClient(data){
+      var stages=data.stages||[];
+      var allExp=data.expenses||[];
+      // Виключаємо скасовані записи (де коментар = 'скасування') з показу замовнику
+      // Але враховуємо від'ємні суми для правильного підрахунку
+      var ts=allExp.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+      var tb=stages.reduce(function(a,s){return a+(parseFloat(s.budget)||0);},0);
+      var html='<div class="hero"><div class="hl">Залишилось на об\'єкті</div><div class="ha">'+fmt(tb-ts)+' ₴</div><div class="hrow"><div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(tb)+' ₴</div></div><div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(Math.max(0,ts))+' ₴</div></div></div></div>';
+      if(stages.length){
+        html+='<div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>';
+        stages.forEach(function(s){
+          var se=allExp.filter(function(e){return e.stage===s.name;});
+          var sp=se.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+          sp=Math.max(0,sp);
+          var bud=parseFloat(s.budget)||0;
+          var pct=bud>0?Math.min(100,Math.round(sp/bud*100)):0;
+          var left=bud-sp;
+          var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+          var sc2=s.status==='closed'?'st-d':'st-a';
+          var sl=s.status==='closed'?'Закрито':'В роботі';
+          var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+          // Показуємо тільки не скасовані витрати замовнику
+          var visExp=se.filter(function(e){return e.comment!=='скасування'&&parseFloat(e.actual)>0;});
+          var exh=visExp.slice(-5).reverse().map(function(e){
+            var d=parseFloat(e.delta)||0;var dc=d>0?'neg':d<0?'pos':'neu';
+            return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+(e.comment&&e.comment!=='скасування'?' · '+e.comment:'')+'</div></div><div><div class="ca">'+fmt(parseFloat(e.actual))+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div></div></div>';
+          }).join('');
+          html+='<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(bud)+' ₴</span> · Витрачено: <span>'+fmt(sp)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin-top:10px">'+exh+'</div>':'')+'</div>';
+        });
+      }else{
+        html+='<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px">Прораб ще не додав жодного етапу</div>';
+      }
+      html+='<button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2);margin-bottom:12px">Оновити дані</button>';
+      html+='<div style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0">Оновлено: '+new Date().toLocaleString('uk-UA')+'</div>';
+      document.getElementById('client-content').innerHTML=html;
+    }
+    loadClientData();
+    setInterval(loadClientData,60000);
+  }
+})();
+
+// ── ONBOARDING ──
+var OB = { type: '', floors: 0, wall: '', area: 0 };
+
+// Стилі для онбордингу
+(function(){
+  var s = document.createElement('style');
+  s.textContent = '.ob-type-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s}.ob-type-btn.sel{border-color:var(--accent);background:var(--al)}.ob-floor-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 6px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}.ob-floor-btn.sel{border-color:var(--accent);color:var(--accent);background:var(--al)}.ob-wall-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}.ob-wall-btn.sel{border-color:var(--accent);background:var(--al)}';
+  document.head.appendChild(s);
+})();
+
+function selectType(t) {
+  OB.type = t;
+  document.querySelectorAll('.ob-type-btn').forEach(function(b){ b.classList.remove('sel'); });
+  document.getElementById('type-'+t).classList.add('sel');
+  var btn = document.getElementById('ob-next1');
+  btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+}
+
+function selectFloors(f, el) {
+  OB.floors = f;
+  document.querySelectorAll('.ob-floor-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  obCheckStep2();
+}
+
+function selectWall(w, el) {
+  OB.wall = w;
+  document.querySelectorAll('.ob-wall-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  obCheckStep2();
+}
+
+function obCheckStep2() {
+  OB.area = parseFloat(document.getElementById('ob-area').value) || 0;
+  var ok = OB.area > 0 && OB.floors > 0 && OB.wall;
+  var btn = document.getElementById('ob-next2');
+  btn.style.opacity = ok ? '1' : '.4';
+  btn.style.pointerEvents = ok ? 'auto' : 'none';
+}
+
+function obStep1() {
+  document.getElementById('ob-step1').style.display = 'block';
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'none';
+}
+
+function obStep2() {
+  document.getElementById('ob-step1').style.display = 'none';
+  document.getElementById('ob-step2').style.display = 'block';
+  document.getElementById('ob-step3').style.display = 'none';
+}
+
+function obCalculate() {
+  OB.area = parseFloat(document.getElementById('ob-area').value) || 0;
+  if (!OB.area || !OB.floors || !OB.wall) return;
+
+  // Коефіцієнти по типу стін (грн/м² загальної площі)
+  var wallCoef = { 'Газоблок': 8500, 'Цегла': 11000, 'Каркас': 7000, 'Монолітний': 13000 };
+  var base = wallCoef[OB.wall] || 9000;
+  var floorCoef = OB.floors === 1 ? 1 : OB.floors === 2 ? 1.7 : OB.floors === 3 ? 2.3 : 1.85;
+  var total = Math.round(OB.area * base * floorCoef);
+
+  // Розбивка по етапах (%)
+  var stages = [
+    { name: 'Фундамент', pct: 0.18 },
+    { name: 'Коробка (стіни)', pct: 0.28 },
+    { name: 'Дах', pct: 0.15 },
+    { name: 'Вікна і двері', pct: 0.10 },
+    { name: 'Оздоблення', pct: 0.20 },
+    { name: 'Комунікації', pct: 0.09 }
+  ];
+
+  document.getElementById('ob-total').textContent = fmt(total) + ' ₴';
+  document.getElementById('ob-obj-label').textContent = OB.type + ' · ' + OB.area + ' м² · ' + (OB.floors === 0 ? '1+мансарда' : OB.floors + ' ' + (OB.floors === 1 ? 'поверх' : 'поверхи')) + ' · ' + OB.wall;
+
+  var grid = document.getElementById('ob-stages-grid');
+  grid.innerHTML = stages.map(function(st) {
+    var sum = Math.round(total * st.pct);
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px"><div style="font-size:11px;color:var(--t3);margin-bottom:3px">'+st.name+'</div><div style="font-size:15px;font-weight:700;color:var(--text)">'+fmt(sum)+' ₴</div></div>';
+  }).join('');
+
+  // Зберігаємо для подальшого використання
+  OB.total = total;
+  OB.stagesData = stages.map(function(st) {
+    return { name: st.name, budget: Math.round(total * st.pct) };
+  });
+
+  document.getElementById('ob-step2').style.display = 'none';
+  document.getElementById('ob-step3').style.display = 'block';
+}
+
+function obStart() {
+  // Додаємо етапи в систему
+  OB.stagesData.forEach(function(st) {
+    var stage = { id: Date.now() + Math.random(), name: st.name, budget: st.budget, spent: 0, status: 'active' };
+    S.stages.push(stage);
+    sync('addStage', { id: stage.id, name: stage.name, budget: stage.budget });
+  });
+  S.pname = OB.type + ' ' + OB.area + ' м²';
+  if (!S.pid) S.pid = 'prorab-' + Date.now();
+  localStorage.setItem('ob_done', '1');
+  save();
+
+  document.getElementById('onboarding').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  renderProject();
+  updSync(); updLink();
+}
+
+// Показуємо онбординг або одразу додаток
+if (!localStorage.getItem('ob_done') && !new URLSearchParams(window.location.search).get('url')) {
+  document.getElementById('onboarding').style.display = 'block';
+  document.getElementById('ob-step1').style.display = 'block';
+} else {
+  document.getElementById('main-app').style.display = 'block';
+}
+
+</script>
+</body>
+</html>
