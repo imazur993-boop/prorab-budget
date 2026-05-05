@@ -592,9 +592,14 @@ function handle(e){
     var ss2=getSheet(ss,pid+'_етапи');
     var exp=es.getLastRow()>1?es.getRange(2,1,es.getLastRow()-1,8).getValues():[];
     var sta=ss2.getLastRow()>1?ss2.getRange(2,1,ss2.getLastRow()-1,5).getValues():[];
+    // Фільтруємо скасування — якщо коментар 'скасування' то це від'ємний рядок
+    // Показуємо всі рядки але з правильними сумами
+    var expenses=exp.map(function(r){
+      return {date:r[0],name:r[1],planned:r[2],actual:r[3],delta:r[4],stage:r[5],cat:r[6],comment:r[7],cancelled:r[7]==='скасування'};
+    });
     var res={
-      expenses:exp.map(function(r){return{date:r[0],name:r[1],planned:r[2],actual:r[3],delta:r[4],stage:r[5],cat:r[6],comment:r[7]}}),
-      stages:sta.map(function(r){return{id:r[0],name:r[1],budget:r[2],status:r[3]}})
+      expenses:expenses,
+      stages:sta.map(function(r){return{id:r[0],name:r[1],budget:r[2],status:r[3]};})
     };
     return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(mime);
   }
@@ -878,6 +883,30 @@ function deleteExp(id){
   save();renderExpList();renderProject();toast('Видалено');
 }
 
+function cancelExpense(id){
+  var exp=S.expenses.find(function(e){return e.id===id;});
+  if(!exp) return;
+  if(exp.cancelled){toast('Вже скасовано');return;}
+  if(!confirm('Скасувати витрату «'+exp.name+'»?\nВ таблицю додасться запис скасування.')) return;
+  // Позначаємо як скасовану
+  exp.cancelled=true;
+  // Зменшуємо витрачено по етапу
+  var stage=S.stages.find(function(s){return s.id===exp.stageId;});
+  if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
+  // Додаємо запис скасування в Google Sheets
+  sync('addExpense',{
+    date:new Date().toLocaleDateString('uk-UA'),
+    name:exp.name,
+    planned:0,
+    actual:-exp.actual,
+    stage:stage?stage.name:'',
+    cat:exp.cat,
+    comment:'скасування'
+  });
+  save();renderExpList();renderProject();
+  toast('Скасовано — таблиця оновлена');
+}
+
 function renderExpList(){
   var el=document.getElementById('exp-list');if(!el) return;
   if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.<br>Додайте першу витрату вище.</p></div>';return;}
@@ -889,9 +918,14 @@ function renderExpList(){
       var dc=d>0?'neg':d<0?'pos':'neu';
       deltaHtml='<div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div>';
     }
-    return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div>'+
+    var cancelledStyle=e.cancelled?'opacity:.4;text-decoration:line-through;':'';
+    var cancelBtn=!e.cancelled?'<button onclick="cancelExpense('+e.id+')" style="flex-shrink:0;height:28px;padding:0 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;color:var(--red);cursor:pointer;white-space:nowrap">Скасувати</button>':'<span style="font-size:11px;color:var(--t3)">Скасовано</span>';
+    return '<div class="ci" style="'+cancelledStyle+'align-items:flex-start;flex-wrap:wrap;gap:6px">'+
+      '<div style="flex:1;min-width:0"><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+
       '<div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div>'+deltaHtml+'</div>'+
-      '</div>';
+      cancelBtn+
+      '</div></div>';
   }).join('');
 }
 
@@ -1043,15 +1077,18 @@ load();renderProject();runCalc();
     window.loadClientData=loadClientData;
     function renderClient(data){
       var stages=data.stages||[];
-      var expenses=data.expenses||[];
+      var allExp=data.expenses||[];
+      // Виключаємо скасовані записи (де коментар = 'скасування') з показу замовнику
+      // Але враховуємо від'ємні суми для правильного підрахунку
+      var ts=allExp.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
       var tb=stages.reduce(function(a,s){return a+(parseFloat(s.budget)||0);},0);
-      var ts=expenses.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
-      var html='<div class="hero"><div class="hl">Залишилось на об\'єкті</div><div class="ha">'+fmt(tb-ts)+' ₴</div><div class="hrow"><div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(tb)+' ₴</div></div><div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(ts)+' ₴</div></div></div></div>';
+      var html='<div class="hero"><div class="hl">Залишилось на об\'єкті</div><div class="ha">'+fmt(tb-ts)+' ₴</div><div class="hrow"><div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(tb)+' ₴</div></div><div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(Math.max(0,ts))+' ₴</div></div></div></div>';
       if(stages.length){
         html+='<div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>';
         stages.forEach(function(s){
-          var se=expenses.filter(function(e){return e.stage===s.name;});
+          var se=allExp.filter(function(e){return e.stage===s.name;});
           var sp=se.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+          sp=Math.max(0,sp);
           var bud=parseFloat(s.budget)||0;
           var pct=bud>0?Math.min(100,Math.round(sp/bud*100)):0;
           var left=bud-sp;
@@ -1059,9 +1096,11 @@ load();renderProject();runCalc();
           var sc2=s.status==='closed'?'st-d':'st-a';
           var sl=s.status==='closed'?'Закрито':'В роботі';
           var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
-          var exh=se.slice(-5).reverse().map(function(e){
+          // Показуємо тільки не скасовані витрати замовнику
+          var visExp=se.filter(function(e){return e.comment!=='скасування'&&parseFloat(e.actual)>0;});
+          var exh=visExp.slice(-5).reverse().map(function(e){
             var d=parseFloat(e.delta)||0;var dc=d>0?'neg':d<0?'pos':'neu';
-            return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+(e.comment?' · '+e.comment:'')+'</div></div><div><div class="ca">'+fmt(parseFloat(e.actual))+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div></div></div>';
+            return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+(e.comment&&e.comment!=='скасування'?' · '+e.comment:'')+'</div></div><div><div class="ca">'+fmt(parseFloat(e.actual))+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div></div></div>';
           }).join('');
           html+='<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(bud)+' ₴</span> · Витрачено: <span>'+fmt(sp)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin-top:10px">'+exh+'</div>':'')+'</div>';
         });
