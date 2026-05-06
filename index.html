@@ -259,14 +259,14 @@ textarea:focus{outline:none;border-color:var(--accent)}
       <div class="irow"><input type="text" id="en" placeholder="Цемент, арматура, бригада..."></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:2fr 80px 2fr;gap:6px;margin-bottom:12px;overflow:hidden">
       <div class="field" style="margin-bottom:0">
         <label>Кількість</label>
-        <div class="irow"><input type="number" id="eq" placeholder="0" inputmode="decimal" oninput="calcExpTotal()" style="min-width:0"></div>
+        <div class="irow" style="overflow:hidden"><input type="number" id="eq" placeholder="0" inputmode="decimal" oninput="calcExpTotal()" style="min-width:0;width:100%"></div>
       </div>
       <div class="field" style="margin-bottom:0">
-        <label>Одиниця</label>
-        <select id="eu" style="height:46px;border:1px solid var(--border);border-radius:var(--rs);padding:0 8px;font-size:14px;font-family:Manrope,sans-serif;color:var(--text);background:var(--surface);width:100%;-webkit-appearance:none">
+        <label>Од.</label>
+        <select id="eu" style="height:46px;border:1px solid var(--border);border-radius:var(--rs);padding:0 4px;font-size:13px;font-family:Manrope,sans-serif;color:var(--text);background:var(--surface);width:100%;-webkit-appearance:none">
           <option>шт</option>
           <option>мішків</option>
           <option>кг</option>
@@ -282,8 +282,8 @@ textarea:focus{outline:none;border-color:var(--accent)}
         </select>
       </div>
       <div class="field" style="margin-bottom:0">
-        <label>Ціна / од.</label>
-        <div class="irow"><input type="number" id="eup" placeholder="0" inputmode="decimal" oninput="calcExpTotal()" style="min-width:0"><span class="unit">₴</span></div>
+        <label>Ціна/од. ₴</label>
+        <div class="irow" style="overflow:hidden"><input type="number" id="eup" placeholder="0" inputmode="decimal" oninput="calcExpTotal()" style="min-width:0;width:100%"></div>
       </div>
     </div>
 
@@ -745,7 +745,17 @@ async function addStage(){
   var name=document.getElementById('mn').value.trim();
   var budget=parseFloat(document.getElementById('mb').value)||0;
   if(!name||!budget){toast('Заповніть назву і бюджет');return;}
-  var stage={id:Date.now(),name,budget,spent:0,status:'active'};
+  // Перевіряємо чи вже є етап з такою назвою
+  var existing=S.stages.find(function(s){return s.name===name;});
+  if(existing){
+    if(confirm('Етап «'+name+'» вже існує. Оновити його бюджет на '+fmt(budget)+' ₴?')){
+      existing.budget=budget;
+      save();closeModal('m-stage');renderProject();toast('Бюджет оновлено!');
+      sync('updateStage',{id:existing.id,name:existing.name,budget:existing.budget});
+    }
+    return;
+  }
+  var stage={id:String(Date.now()),name:name,budget:budget,spent:0,status:'active'};
   S.stages.push(stage);
 
   // Якщо є планові позиції з калькулятора — додаємо їх як заплановані витрати
@@ -939,20 +949,19 @@ async function addExp(){
   var unitPrice=parseFloat(document.getElementById('eup').value)||0;
   var actual=parseFloat(document.getElementById('ea').value)||0;
   var planned=parseFloat(document.getElementById('ep').value)||0;
-  var sid=parseInt(document.getElementById('es').value);
-  var cat=document.getElementById('ec').value;
-  var comment=document.getElementById('ecm').value.trim();
+  var sid=document.getElementById('es').value;
+  if(!sid){toast('Оберіть етап');return;}
+  // Шукаємо по id як рядок і як число
+  var stage=S.stages.find(function(s){return String(s.id)===String(sid);});
   if(!name){toast('Введіть що купили');return;}
   if(!actual){toast('Введіть суму');return;}
-  if(!sid){toast('Оберіть етап');return;}
-  // Додаємо кількість до назви якщо введено
+  if(!stage){toast('Оберіть етап');return;}
   var fullName=name;
-  if(qty>0) fullName=name+' '+qty+' '+unit+(unitPrice>0?' по '+fmt(unitPrice)+' ₴':'');
+  if(qty>0) fullName=name+(qty>0?' '+qty+' '+unit:'')+(unitPrice>0?' по '+fmt(unitPrice)+' ₴':'');
   var delta=planned>0?actual-planned:0;
-  var exp={id:Date.now(),name:fullName,planned,actual,stageId:sid,cat,comment,date:new Date().toLocaleDateString('uk-UA'),delta};
+  var exp={id:Date.now(),name:fullName,planned:planned,actual:actual,stageId:String(sid),cat:document.getElementById('ec').value,comment:document.getElementById('ecm').value.trim(),date:new Date().toLocaleDateString('uk-UA'),delta:delta};
   S.expenses.push(exp);
-  var stage=S.stages.find(s=>s.id===sid);
-  if(stage) stage.spent+=actual;
+  stage.spent=(stage.spent||0)+actual;
   if(planned>0&&Math.abs(delta)>0) S.pending=true;
   if(window._prefillItemId){
     var pi=(S.plannedItems||[]).find(function(i){return String(i.id)===String(window._prefillItemId);});
