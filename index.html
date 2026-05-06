@@ -791,7 +791,7 @@ async function addStage(){
 var _editBudgetId=null;
 function showEditBudget(id){
   _editBudgetId=id;
-  var s=S.stages.find(function(x){return x.id===id;});
+  var s=S.stages.find(function(x){return String(x.id)===String(id);});
   if(!s) return;
   document.getElementById('eb-stage-name').textContent='Етап: '+s.name+' · Поточний бюджет: '+fmt(s.budget)+' ₴';
   document.getElementById('eb-budget').value=s.budget;
@@ -801,7 +801,7 @@ function saveEditBudget(){
   if(!_editBudgetId) return;
   var newBudget=parseFloat(document.getElementById('eb-budget').value)||0;
   if(!newBudget){toast('Введіть суму');return;}
-  var s=S.stages.find(function(x){return x.id===_editBudgetId;});
+  var s=S.stages.find(function(x){return String(x.id)===String(_editBudgetId);});
   if(s){
     s.budget=newBudget;
     save();
@@ -823,7 +823,7 @@ function showCloseModal(id){
 }
 async function doCloseStage(){
   if(!_closingId) return;
-  var s=S.stages.find(x=>x.id===_closingId);
+  var s=S.stages.find(function(x){return String(x.id)===String(_closingId);});
   if(s){s.status='closed';S.pending=true;}
   save();closeModal('m-close');renderProject();
   toast('Закрито. Надішліть посилання замовнику.');
@@ -832,6 +832,7 @@ async function doCloseStage(){
 }
 
 function renderProject(){
+  recalcSpent();
   var tb=S.stages.reduce((a,s)=>a+s.budget,0);
   var ts=S.stages.reduce((a,s)=>a+s.spent,0);
   var today=new Date().toLocaleDateString('uk-UA');
@@ -850,7 +851,7 @@ function renderProject(){
     var sc2=s.status==='closed'?'st-d':'st-a';
     var sl=s.status==='closed'?'Закрито':'Активний';
     var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ економія</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
-    var exps=S.expenses.filter(e=>e.stageId===s.id).slice(-3).reverse();
+    var exps=S.expenses.filter(e=>String(e.stageId)===String(s.id)).slice(-3).reverse();
     var exh=exps.map(function(e){
       var d=e.actual-e.planned;
       var dc=d>0?'neg':d<0?'pos':'neu';
@@ -864,10 +865,16 @@ function renderProject(){
 }
 
 // EXPENSES
-function fillStageSelect(){
+function recalcSpent(){
+  S.stages.forEach(function(s){
+    s.spent=S.expenses
+      .filter(function(e){return String(e.stageId)===String(s.id)&&!e.cancelled;})
+      .reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+  });
+}
   var sel=document.getElementById('es');if(!sel) return;
   var active=S.stages.filter(function(s){return s.status==='active';});
-  sel.innerHTML='<option value="">— Оберіть етап —</option>'+active.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+  sel.innerHTML='<option value="">— Оберіть етап —</option>'+active.map(function(s){return '<option value="'+String(s.id)+'">'+s.name+'</option>';}).join('');
   // Якщо тільки один активний етап — обираємо його автоматично
   if(active.length===1) sel.value=active[0].id;
 }
@@ -986,7 +993,7 @@ function deleteExp(id){
   if(!confirm('Видалити цю витрату?')) return;
   var exp=S.expenses.find(function(e){return e.id===id;});
   if(!exp) return;
-  var stage=S.stages.find(function(s){return s.id===exp.stageId;});
+  var stage=S.stages.find(function(s){return String(s.id)===String(exp.stageId);});
   if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
   S.expenses=S.expenses.filter(function(e){return e.id!==id;});
   save();renderExpList();renderProject();toast('Видалено');
@@ -1000,7 +1007,7 @@ function cancelExpense(id){
   // Позначаємо як скасовану
   exp.cancelled=true;
   // Зменшуємо витрачено по етапу
-  var stage=S.stages.find(function(s){return s.id===exp.stageId;});
+  var stage=S.stages.find(function(s){return String(s.id)===String(exp.stageId);});
   if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
   // Додаємо запис скасування в Google Sheets
   sync('addExpense',{
@@ -1020,7 +1027,7 @@ function renderExpList(){
   var el=document.getElementById('exp-list');if(!el) return;
   if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.<br>Додайте першу витрату вище.</p></div>';return;}
   el.innerHTML=[...S.expenses].reverse().slice(0,30).map(function(e){
-    var s=S.stages.find(function(x){return x.id===e.stageId;});
+    var s=S.stages.find(function(x){return String(x.id)===String(e.stageId);});
     var deltaHtml='';
     if(e.planned>0){
       var d=e.delta||0;
@@ -1129,22 +1136,16 @@ function runCalc(){
 }
 function calcToStage(){
   if(!window._ctot) return;
-  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
-  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
-  var vp=v*1.05,arm=v*100,mat=vp*pc+arm*pa;
-
-  // Зберігаємо планові позиції для подальшого використання
-  window._calcItems=[];
   var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc2=nc('cpc'),pa2=nc('cpa'),work2=nc('cwork'),del2=nc('cdel');
   var v2=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
   var vp2=v2*1.05,arm2=v2*100;
   var costConcrete=Math.round(vp2*pc2);
   var costArm=Math.round(arm2*pa2);
+  window._calcItems=[];
   if(costConcrete>0) window._calcItems.push({name:'Бетон '+vp2.toFixed(1)+' м³',planned:costConcrete,cat:'Матеріали'});
   if(costArm>0) window._calcItems.push({name:'Арматура '+Math.round(arm2)+' кг',planned:costArm,cat:'Матеріали'});
   if(work2>0) window._calcItems.push({name:'Роботи',planned:Math.round(work2),cat:'Роботи'});
   if(del2>0) window._calcItems.push({name:'Доставка',planned:Math.round(del2),cat:'Транспорт'});
-
   document.getElementById('mb').value=window._ctot;
   document.getElementById('mn').value='Фундамент ('+ct+')';
   openModal('m-stage');
@@ -1156,7 +1157,7 @@ function exportJ(){
 }
 function clearAll(){if(!confirm('Видалити дані проєкту? Налаштування підключення збережуться.')) return;S.stages=[];S.expenses=[];S.plannedItems=[];S.pending=false;save();renderProject();toast('Дані проєкту видалено. Налаштування збережені.');}
 
-load();renderProject();runCalc();fillStageSelect();
+load();recalcSpent();renderProject();runCalc();fillStageSelect();
 
 // Якщо відкрито як сторінка замовника — показуємо клієнтський вид
 (function(){
@@ -1356,7 +1357,7 @@ function obStart() {
   // Додаємо всі етапи в S.stages
   S.stages = [];
   OB.stagesData.forEach(function(st) {
-    var stage = { id: Date.now() + Math.random(), name: st.name, budget: st.budget, spent: 0, status: 'active' };
+    var stage = { id: String(Date.now() + Math.random()), name: st.name, budget: st.budget, spent: 0, status: 'active' };
     S.stages.push(stage);
   });
   // Зберігаємо ВСЕ одразу
