@@ -745,12 +745,15 @@ async function addStage(){
   var name=document.getElementById('mn').value.trim();
   var budget=parseFloat(document.getElementById('mb').value)||0;
   if(!name||!budget){toast('Заповніть назву і бюджет');return;}
-  // Перевіряємо чи вже є етап з такою назвою
-  var existing=S.stages.find(function(s){return s.name===name;});
+  // Перевіряємо чи вже є схожий етап (по першому слову)
+  var firstName=name.split(' ')[0].toLowerCase();
+  var existing=S.stages.find(function(s){
+    return s.name.split(' ')[0].toLowerCase()===firstName;
+  });
   if(existing){
-    if(confirm('Етап «'+name+'» вже існує. Оновити його бюджет на '+fmt(budget)+' ₴?')){
+    if(confirm('Схожий етап «'+existing.name+'» вже існує. Оновити його бюджет на '+fmt(budget)+' ₴?')){
       existing.budget=budget;
-      save();closeModal('m-stage');renderProject();toast('Бюджет оновлено!');
+      save();closeModal('m-stage');renderProject();fillStageSelect();toast('Бюджет оновлено!');
       sync('updateStage',{id:existing.id,name:existing.name,budget:existing.budget});
     }
     return;
@@ -872,11 +875,12 @@ function recalcSpent(){
       .reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
   });
 }
+
+function fillStageSelect(){
   var sel=document.getElementById('es');if(!sel) return;
   var active=S.stages.filter(function(s){return s.status==='active';});
   sel.innerHTML='<option value="">— Оберіть етап —</option>'+active.map(function(s){return '<option value="'+String(s.id)+'">'+s.name+'</option>';}).join('');
-  // Якщо тільки один активний етап — обираємо його автоматично
-  if(active.length===1) sel.value=active[0].id;
+  if(active.length===1) sel.value=String(active[0].id);
 }
 
 function renderPlannedItems(){
