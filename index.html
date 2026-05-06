@@ -92,6 +92,21 @@ textarea:focus{outline:none;border-color:var(--accent)}
 .calc-total-main{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;font-size:13px;color:rgba(255,255,255,.6)}
 .calc-total-main span:last-child{font-size:22px;font-weight:700;color:#fff}
 </style>
+<style>
+.ob-type-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s}
+.ob-type-btn.sel{border-color:var(--accent);background:var(--al)}
+.ob-floor-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 6px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.ob-floor-btn.sel{border-color:var(--accent);color:var(--accent);background:var(--al)}
+.ob-wall-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
+.ob-wall-btn.sel{border-color:var(--accent);background:var(--al)}
+.calc-sel-btn{border:1px solid var(--border);border-radius:var(--rs);padding:10px 6px;font-size:13px;font-weight:500;color:var(--t2);background:var(--surface);cursor:pointer;text-align:center;font-family:'Manrope',sans-serif;transition:all .15s}
+.calc-sel-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.calc-total-block{background:var(--navy);border-radius:var(--r);padding:14px 16px;margin-bottom:8px}
+.calc-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px;color:rgba(255,255,255,.6)}
+.calc-total-row span:last-child{font-size:15px;font-weight:600;color:#fff}
+.calc-total-main{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,.15);padding-top:10px;font-size:13px;color:rgba(255,255,255,.6)}
+.calc-total-main span:last-child{font-size:22px;font-weight:700;color:#fff}
+</style>
 </head>
 <body>
 
@@ -607,7 +622,13 @@ textarea:focus{outline:none;border-color:var(--accent)}
 
 </div><!-- /main-app -->
 
+
 <script>
+// ═══════════════════════════════════════
+// ПРОРАБ.БЮДЖЕТ — ПОВНИЙ ПЕРЕЗАПИС JS
+// ═══════════════════════════════════════
+
+// Apps Script код для копіювання
 var SCRIPT_CODE = `function doGet(e){return handle(e)}
 function doPost(e){return handle(e)}
 function handle(e){
@@ -617,96 +638,481 @@ function handle(e){
   var mime=ContentService.MimeType.JSON;
   if(act==='ping') return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
   if(act==='addExpense'){
-    var sh=getSheet(ss,pid+'_витрати');
+    var sh=getOrCreate(ss,pid+'_витрати',['Дата','Назва','Планова','Фактична','Різниця','Етап','Категорія','Коментар']);
     var d=JSON.parse(e.postData.contents);
-    if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['Дата','Назва','Планова','Фактична','Різниця','Етап','Категорія','Коментар']);
-    sh.appendRow([d.date,d.name,d.planned,d.actual,d.actual-d.planned,d.stage,d.cat,d.comment||'']);
-    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+    sh.appendRow([d.date,d.name,d.planned||0,d.actual,d.actual-(d.planned||0),d.stage||'',d.cat||'',d.comment||'']);
+    return ok(mime);
   }
   if(act==='addStage'){
-    var sh=getSheet(ss,pid+'_етапи');
+    var sh=getOrCreate(ss,pid+'_етапи',['ID','Назва','Бюджет','Статус','Дата']);
     var d=JSON.parse(e.postData.contents);
-    if(sh.getLastRow()<1||!sh.getRange(1,1).getValue()) sh.appendRow(['ID','Назва','Бюджет','Статус','Дата']);
     sh.appendRow([d.id,d.name,d.budget,'active',new Date().toLocaleDateString('uk-UA')]);
-    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+    return ok(mime);
   }
   if(act==='updateStage'){
-    var sh=getSheet(ss,pid+'_етапи');
+    var sh=getOrCreate(ss,pid+'_етапи',[]);
     var d=JSON.parse(e.postData.contents);
     var rows=sh.getDataRange().getValues();
-    for(var i=1;i<rows.length;i++){if(rows[i][0]==d.id){sh.getRange(i+1,3).setValue(d.budget);break;}}
-    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+    for(var i=1;i<rows.length;i++){if(String(rows[i][0])===String(d.id)){sh.getRange(i+1,3).setValue(d.budget);break;}}
+    return ok(mime);
   }
   if(act==='closeStage'){
-    var sh=getSheet(ss,pid+'_етапи');
+    var sh=getOrCreate(ss,pid+'_етапи',[]);
     var d=JSON.parse(e.postData.contents);
     var rows=sh.getDataRange().getValues();
-    for(var i=1;i<rows.length;i++){if(rows[i][0]==d.id){sh.getRange(i+1,4).setValue('closed');break;}}
-    return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);
+    for(var i=1;i<rows.length;i++){if(String(rows[i][0])===String(d.id)){sh.getRange(i+1,4).setValue('closed');break;}}
+    return ok(mime);
   }
   if(act==='getData'){
-    var es=getSheet(ss,pid+'_витрати');
-    var ss2=getSheet(ss,pid+'_етапи');
+    var es=getOrCreate(ss,pid+'_витрати',[]);
+    var st=getOrCreate(ss,pid+'_етапи',[]);
     var exp=es.getLastRow()>1?es.getRange(2,1,es.getLastRow()-1,8).getValues():[];
-    var sta=ss2.getLastRow()>1?ss2.getRange(2,1,ss2.getLastRow()-1,5).getValues():[];
-    // Фільтруємо скасування — якщо коментар 'скасування' то це від'ємний рядок
-    // Показуємо всі рядки але з правильними сумами
-    var expenses=exp.map(function(r){
-      return {date:r[0],name:r[1],planned:r[2],actual:r[3],delta:r[4],stage:r[5],cat:r[6],comment:r[7],cancelled:r[7]==='скасування'};
-    });
+    var sta=st.getLastRow()>1?st.getRange(2,1,st.getLastRow()-1,5).getValues():[];
     var res={
-      expenses:expenses,
-      stages:sta.map(function(r){return{id:r[0],name:r[1],budget:r[2],status:r[3]};})
+      expenses:exp.map(function(r){return{date:r[0],name:r[1],planned:r[2],actual:r[3],delta:r[4],stage:r[5],cat:r[6],comment:r[7],cancelled:r[7]==='скасування'};}),
+      stages:sta.map(function(r){return{id:String(r[0]),name:r[1],budget:r[2],status:r[3]};})
     };
     return ContentService.createTextOutput(JSON.stringify(res)).setMimeType(mime);
   }
   return ContentService.createTextOutput(JSON.stringify({ok:false})).setMimeType(mime);
 }
-function getSheet(ss,name){var s=ss.getSheetByName(name);if(!s)s=ss.insertSheet(name);return s;}`;
+function ok(mime){return ContentService.createTextOutput(JSON.stringify({ok:true})).setMimeType(mime);}
+function getOrCreate(ss,name,headers){
+  var s=ss.getSheetByName(name);
+  if(!s){s=ss.insertSheet(name);if(headers.length)s.appendRow(headers);}
+  return s;
+}`;
 
-// STATE
-var S={url:'',pid:'',pname:'',stages:[],expenses:[],pending:false};
+// ── СТАН ──
+var S = {url:'', pid:'', pname:'', stages:[], expenses:[], plannedItems:[], pending:false};
 
+// ── УТИЛІТИ ──
+function fmt(v){return Math.round(v||0).toLocaleString('uk-UA');}
+function nc(id){var el=document.getElementById(id);return el?parseFloat(el.value)||0:0;}
+function toast(msg,dur){
+  var t=document.getElementById('toast-el');
+  if(!t)return;
+  t.textContent=msg;t.classList.add('on');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(function(){t.classList.remove('on');},dur||2800);
+}
+function openModal(id){var el=document.getElementById(id);if(el)el.classList.add('on');}
+function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){['m-stage','m-close','m-edit-budget'].forEach(closeModal);}
+});
+
+// ── ЗБЕРЕЖЕННЯ / ЗАВАНТАЖЕННЯ ──
+function save(){localStorage.setItem('pb2',JSON.stringify(S));}
 function load(){
-  try{var d=JSON.parse(localStorage.getItem('pb2')||'{}');Object.assign(S,d);}catch(e){}
-  if(document.getElementById('su')) document.getElementById('su').value=S.url||'';
-  if(document.getElementById('pn')) document.getElementById('pn').value=S.pname||'';
-  if(document.getElementById('pi')) document.getElementById('pi').value=S.pid||'';
+  try{
+    var d=JSON.parse(localStorage.getItem('pb2')||'{}');
+    Object.assign(S,d);
+    // Нормалізуємо всі ID до рядків
+    if(S.stages) S.stages.forEach(function(s){s.id=String(s.id);s.spent=s.spent||0;});
+    if(S.expenses) S.expenses.forEach(function(e){e.stageId=String(e.stageId||'');});
+    if(S.plannedItems) S.plannedItems.forEach(function(i){i.stageId=String(i.stageId||'');});
+  }catch(err){}
+  var su=document.getElementById('su');if(su)su.value=S.url||'';
+  var pn=document.getElementById('pn');if(pn)pn.value=S.pname||'';
+  var pi=document.getElementById('pi');if(pi)pi.value=S.pid||'';
   updSync();updLink();
 }
-function save(){localStorage.setItem('pb2',JSON.stringify(S));}
-function fmt(v){return Math.round(v).toLocaleString('uk-UA');}
-function toast(msg,dur){var t=document.getElementById('toast-el');t.textContent=msg;t.classList.add('on');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('on'),dur||2800);}
 
-function go(name){
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById('scr-'+name).classList.add('on');
-  var m={project:0,expense:1,calc:2,settings:3};
-  document.querySelectorAll('.tab')[m[name]].classList.add('on');
-  if(name==='project') renderProject();
-  if(name==='expense'){renderExpList();fillStageSelect();renderPlannedItems();}
-  if(name==='calc') runCalc();
-  window.scrollTo(0,0);
+// ── СИНХРОНІЗАЦІЯ ──
+async function sync(action,data){
+  if(!S.url)return false;
+  try{
+    var r=await fetch(S.url+'?action='+action+'&pid='+encodeURIComponent(S.pid||'default'),
+      {method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});
+    var j=await r.json();
+    return j.ok;
+  }catch(e){return false;}
 }
-function openModal(id){document.getElementById(id).classList.add('on');}
-function closeModal(id){document.getElementById(id).classList.remove('on');}
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){['m-stage','m-close','m-edit-budget'].forEach(function(id){closeModal(id);});}});
-
 function updSync(){
   var el=document.getElementById('sync-el');
-  el.className='sync '+(S.url?'s-ok':'s-no');
-  el.textContent=S.url?'● онлайн':'● офлайн';
+  if(!el)return;
+  if(S.url){el.className='sync s-ok';el.textContent='● онлайн';}
+  else{el.className='sync s-no';el.textContent='● офлайн';}
 }
 function updLink(){
   var el=document.getElementById('cl-display');
-  if(!el) return;
+  if(!el)return;
   if(S.url&&S.pid){
-    var base=window.location.href.replace(/[^\/]*$/, '');
+    var base=window.location.href.replace(/[^\/]*$/,'');
     el.textContent=base+'index.html?url='+encodeURIComponent(S.url)+'&pid='+encodeURIComponent(S.pid)+'&name='+encodeURIComponent(S.pname||'');
   }else{el.textContent='Налаштуйте Apps Script URL і ID проєкту';}
 }
 
+// ── РОЗРАХУНОК ВИТРАЧЕНО ──
+function recalcSpent(){
+  if(!S.stages||!S.expenses)return;
+  S.stages.forEach(function(stage){
+    stage.spent=S.expenses
+      .filter(function(e){return String(e.stageId)===String(stage.id)&&!e.cancelled;})
+      .reduce(function(sum,e){return sum+(parseFloat(e.actual)||0);},0);
+  });
+}
+
+// ── ЗАПОВНЕННЯ СПИСКУ ЕТАПІВ ──
+function fillStageSelect(){
+  var sel=document.getElementById('es');
+  if(!sel)return;
+  var active=(S.stages||[]).filter(function(s){return s.status==='active';});
+  sel.innerHTML='<option value="">— Оберіть етап —</option>'+
+    active.map(function(s){
+      return '<option value="'+s.id+'">'+s.name+'</option>';
+    }).join('');
+  // Якщо тільки один етап — обираємо автоматично
+  if(active.length===1)sel.value=active[0].id;
+}
+
+// ── НАВІГАЦІЯ ──
+function go(name){
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  var scr=document.getElementById('scr-'+name);
+  if(scr)scr.classList.add('on');
+  var tabs={project:0,expense:1,calc:2,settings:3};
+  var tabEls=document.querySelectorAll('.tab');
+  if(tabs[name]!==undefined&&tabEls[tabs[name]])tabEls[tabs[name]].classList.add('on');
+  if(name==='project'){recalcSpent();renderProject();}
+  if(name==='expense'){fillStageSelect();renderExpList();renderPlannedItems();}
+  if(name==='calc')runCalc();
+  window.scrollTo(0,0);
+}
+
+// ── РЕНДЕР ПРОЄКТУ ──
+function renderProject(){
+  recalcSpent();
+  var total=S.stages.reduce(function(a,s){return a+(s.budget||0);},0);
+  var spent=S.stages.reduce(function(a,s){return a+(s.spent||0);},0);
+  var today=new Date().toLocaleDateString('uk-UA');
+  var todaySpent=S.expenses
+    .filter(function(e){return e.date===today&&!e.cancelled;})
+    .reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+
+  var ha=document.getElementById('hero-amount');if(ha)ha.textContent=fmt(total-spent)+' ₴';
+  var hb=document.getElementById('hero-budget');if(hb)hb.textContent=fmt(total)+' ₴';
+  var hs=document.getElementById('hero-spent');if(hs)hs.textContent=fmt(spent)+' ₴';
+  var ht=document.getElementById('hero-today');if(ht)ht.textContent=fmt(todaySpent)+' ₴';
+
+  // Нотифікація для замовника
+  var appr=document.getElementById('appr-block');
+  if(appr)appr.style.display=S.pending?'block':'none';
+
+  // Список етапів
+  var list=document.getElementById('stages-list');
+  if(!list)return;
+  if(!S.stages.length){
+    list.innerHTML='<div class="empty"><div class="ic">🏗️</div><p>Немає жодного етапу.<br>Додайте перший нижче.</p></div>';
+    return;
+  }
+
+  list.innerHTML=S.stages.map(function(s){
+    var pct=s.budget>0?Math.min(100,Math.round((s.spent||0)/s.budget*100)):0;
+    var left=(s.budget||0)-(s.spent||0);
+    var barClass=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+    var statusClass=s.status==='closed'?'st-d':'st-a';
+    var statusText=s.status==='closed'?'Закрито':'Активний';
+    var deltaHtml=left>=0
+      ?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>'
+      :'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+
+    // Останні витрати по етапу
+    var recentExp=S.expenses
+      .filter(function(e){return String(e.stageId)===String(s.id)&&!e.cancelled;})
+      .slice(-3).reverse()
+      .map(function(e){
+        return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+'</div></div>'+
+          '<div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div></div></div>';
+      }).join('');
+
+    var buttons=s.status==='closed'
+      ?'<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">Закрито</div>'
+      :'<div class="scact">'+
+        '<button class="sab pa" onclick="goExpenseStage(\''+s.id+'\')">+ Витрата</button>'+
+        '<button class="sab" onclick="showEditBudget(\''+s.id+'\')" style="background:var(--s2);color:var(--t2)">Змінити бюджет</button>'+
+        '<button class="sab pg" onclick="showCloseModal(\''+s.id+'\')">Закрити</button>'+
+        '</div>';
+
+    return '<div class="sc">'+
+      '<div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+statusClass+'">'+statusText+'</span></div>'+
+      '<div class="scbar"><div class="scfill '+barClass+'" style="width:'+pct+'%"></div></div>'+
+      '<div class="scnums">Бюджет: <span>'+fmt(s.budget)+' ₴</span> · Витрачено: <span>'+fmt(s.spent||0)+' ₴</span> · '+pct+'%</div>'+
+      deltaHtml+
+      (recentExp?'<div style="margin-top:10px">'+recentExp+'</div>':'')+
+      buttons+
+      '</div>';
+  }).join('');
+}
+
+// Натискання + Витрата з картки етапу
+function goExpenseStage(stageId){
+  go('expense');
+  setTimeout(function(){
+    var sel=document.getElementById('es');
+    if(sel)sel.value=String(stageId);
+  },50);
+}
+
+// ── ЕТАПИ ──
+async function addStage(){
+  var name=document.getElementById('mn').value.trim();
+  var budget=parseFloat(document.getElementById('mb').value)||0;
+  if(!name||!budget){toast('Заповніть назву і бюджет');return;}
+
+  // Перевіряємо дублікат по першому слову
+  var key=name.split(' ')[0].toLowerCase();
+  var existing=S.stages.find(function(s){return s.name.split(' ')[0].toLowerCase()===key;});
+  if(existing){
+    if(confirm('Схожий етап «'+existing.name+'» вже існує. Оновити бюджет на '+fmt(budget)+' ₴?')){
+      existing.budget=budget;
+      save();closeModal('m-stage');renderProject();fillStageSelect();
+      toast('Бюджет оновлено!');
+      sync('updateStage',{id:existing.id,name:existing.name,budget:existing.budget});
+    }
+    return;
+  }
+
+  var stage={id:String(Date.now()),name:name,budget:budget,spent:0,status:'active'};
+  S.stages.push(stage);
+
+  // Планові позиції з калькулятора
+  var items=window._calcItems||[];
+  var today=new Date().toLocaleDateString('uk-UA');
+  S.plannedItems=S.plannedItems||[];
+  items.forEach(function(item){
+    S.plannedItems.push({
+      id:String(Date.now()+Math.random()),
+      stageId:stage.id,
+      stageName:name,
+      name:item.name,
+      planned:item.planned,
+      cat:item.cat,
+      paid:false,
+      date:today
+    });
+  });
+  window._calcItems=[];
+
+  save();
+  closeModal('m-stage');
+  document.getElementById('mn').value='';
+  document.getElementById('mb').value='';
+  renderProject();fillStageSelect();
+  toast(items.length?'Етап додано! '+items.length+' позицій готові до оплати.':'Етап додано!');
+  sync('addStage',{id:stage.id,name:stage.name,budget:stage.budget});
+}
+
+var _editBudgetId=null;
+function showEditBudget(id){
+  _editBudgetId=String(id);
+  var s=S.stages.find(function(x){return String(x.id)===String(id);});
+  if(!s)return;
+  var el=document.getElementById('eb-stage-name');
+  if(el)el.textContent='Етап: '+s.name+' · Поточний бюджет: '+fmt(s.budget)+' ₴';
+  var eb=document.getElementById('eb-budget');
+  if(eb)eb.value=s.budget;
+  openModal('m-edit-budget');
+}
+function saveEditBudget(){
+  if(!_editBudgetId)return;
+  var budget=parseFloat(document.getElementById('eb-budget').value)||0;
+  if(!budget){toast('Введіть суму');return;}
+  var s=S.stages.find(function(x){return String(x.id)===String(_editBudgetId);});
+  if(s){
+    s.budget=budget;
+    save();closeModal('m-edit-budget');renderProject();
+    toast('Бюджет оновлено!');
+    sync('updateStage',{id:s.id,name:s.name,budget:s.budget});
+  }
+  _editBudgetId=null;
+}
+
+var _closingId=null;
+function showCloseModal(id){
+  _closingId=String(id);
+  var s=S.stages.find(function(x){return String(x.id)===String(id);});
+  if(!s)return;
+  var left=(s.budget||0)-(s.spent||0);
+  var title=document.getElementById('mc-title');if(title)title.textContent='Закрити етап';
+  var text=document.getElementById('mc-text');
+  if(text)text.textContent='Бюджет: '+fmt(s.budget)+' ₴\nВитрачено: '+fmt(s.spent||0)+' ₴\n'+(left>=0?'Економія: '+fmt(left)+' ₴':'Перевитрата: '+fmt(Math.abs(left))+' ₴')+'\n\nЗамовник отримає фінальний звіт.';
+  openModal('m-close');
+}
+async function doCloseStage(){
+  if(!_closingId)return;
+  var s=S.stages.find(function(x){return String(x.id)===String(_closingId);});
+  if(s){s.status='closed';}
+  S.pending=true;save();closeModal('m-close');renderProject();toast('Етап закрито!');
+  sync('closeStage',{id:_closingId});
+  _closingId=null;
+}
+
+// ── ВИТРАТИ ──
+function calcExpTotal(){
+  var q=parseFloat(document.getElementById('eq').value)||0;
+  var p=parseFloat(document.getElementById('eup').value)||0;
+  if(q>0&&p>0)document.getElementById('ea').value=Math.round(q*p);
+}
+
+async function addExp(){
+  var name=document.getElementById('en').value.trim();
+  var qty=parseFloat(document.getElementById('eq').value)||0;
+  var unit=document.getElementById('eu').value||'шт';
+  var unitPrice=parseFloat(document.getElementById('eup').value)||0;
+  var actual=parseFloat(document.getElementById('ea').value)||0;
+  var planned=parseFloat(document.getElementById('ep').value)||0;
+  var stageId=document.getElementById('es').value;
+  var cat=document.getElementById('ec').value||'Матеріали';
+  var comment=document.getElementById('ecm').value.trim();
+
+  if(!name){toast('Введіть що купили');return;}
+  if(!actual){toast('Введіть суму');return;}
+  if(!stageId){toast('Оберіть етап');return;}
+
+  var stage=S.stages.find(function(s){return String(s.id)===String(stageId);});
+  if(!stage){toast('Етап не знайдено');return;}
+
+  var fullName=name+(qty>0?' '+qty+' '+unit+(unitPrice>0?' по '+fmt(unitPrice)+' ₴':''):'');
+  var delta=planned>0?actual-planned:0;
+  var exp={
+    id:String(Date.now()),
+    name:fullName,
+    planned:planned,
+    actual:actual,
+    stageId:String(stageId),
+    cat:cat,
+    comment:comment,
+    date:new Date().toLocaleDateString('uk-UA'),
+    delta:delta,
+    cancelled:false
+  };
+  S.expenses.push(exp);
+  if(planned>0&&Math.abs(delta)>0)S.pending=true;
+
+  // Відмічаємо заплановану позицію як оплачену
+  if(window._prefillItemId){
+    var pi=(S.plannedItems||[]).find(function(i){return String(i.id)===String(window._prefillItemId);});
+    if(pi)pi.paid=true;
+    window._prefillItemId=null;
+  }
+
+  save();
+
+  // Очищаємо форму
+  ['en','eq','eup','ea','ep','ecm'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.value='';
+  });
+  var dbl=document.getElementById('delta-bl');if(dbl)dbl.style.display='none';
+  var det=document.getElementById('exp-details');if(det)det.style.display='none';
+  var arr=document.getElementById('exp-details-arrow');if(arr)arr.textContent='▶';
+
+  recalcSpent();
+  renderExpList();renderPlannedItems();renderProject();
+  toast('Зафіксовано!');
+
+  var ok=await sync('addExpense',{
+    date:exp.date,name:exp.name,planned:exp.planned,actual:exp.actual,
+    stage:stage.name,cat:exp.cat,comment:exp.comment
+  });
+  if(ok)toast('Збережено ✓');
+}
+
+function cancelExpense(id){
+  var exp=S.expenses.find(function(e){return String(e.id)===String(id);});
+  if(!exp){toast('Витрата не знайдена');return;}
+  if(exp.cancelled){toast('Вже скасовано');return;}
+  if(!confirm('Скасувати витрату «'+exp.name+'»?'))return;
+  exp.cancelled=true;
+  var stage=S.stages.find(function(s){return String(s.id)===String(exp.stageId);});
+  save();recalcSpent();renderExpList();renderProject();toast('Скасовано');
+  sync('addExpense',{
+    date:new Date().toLocaleDateString('uk-UA'),
+    name:exp.name,planned:0,actual:-exp.actual,
+    stage:stage?stage.name:'',cat:exp.cat,comment:'скасування'
+  });
+}
+
+function renderExpList(){
+  var el=document.getElementById('exp-list');if(!el)return;
+  var exps=(S.expenses||[]).slice().reverse().slice(0,30);
+  if(!exps.length){
+    el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.<br>Додайте першу витрату вище.</p></div>';
+    return;
+  }
+  el.innerHTML=exps.map(function(e){
+    var stage=S.stages.find(function(s){return String(s.id)===String(e.stageId);});
+    var stageName=stage?stage.name:'—';
+    var cancelBtn=e.cancelled
+      ?'<span style="font-size:11px;color:var(--t3)">Скасовано</span>'
+      :'<button onclick="cancelExpense(\''+e.id+'\')" style="flex-shrink:0;height:28px;padding:0 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;color:var(--red);cursor:pointer">Скасувати</button>';
+    var style=e.cancelled?'opacity:.4;text-decoration:line-through':'';
+    return '<div class="ci" style="'+style+';flex-wrap:wrap;gap:6px">'+
+      '<div style="flex:1;min-width:0"><div class="cn">'+e.name+'</div>'+
+      '<div class="cm">'+e.date+' · '+stageName+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+      '<div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div></div>'+
+      cancelBtn+'</div></div>';
+  }).join('');
+}
+
+function renderPlannedItems(){
+  var items=(S.plannedItems||[]).filter(function(i){return!i.paid;});
+  var block=document.getElementById('planned-items-block');
+  var list=document.getElementById('planned-items-list');
+  if(!block||!list)return;
+  if(!items.length){block.style.display='none';return;}
+  block.style.display='block';
+  list.innerHTML=items.map(function(item){
+    return '<div class="ci" style="margin-bottom:6px;border:1.5px solid var(--accent);cursor:pointer" onclick="prefillExpense(\''+item.id+'\')">'+
+      '<div><div class="cn">'+item.name+'</div><div class="cm">'+item.stageName+' · '+item.cat+'</div></div>'+
+      '<div class="cr"><div class="ca" style="color:var(--accent)">'+fmt(item.planned)+' ₴</div><div class="ccat">план · натисніть оплатити</div></div>'+
+      '</div>';
+  }).join('');
+}
+
+function prefillExpense(itemId){
+  var item=(S.plannedItems||[]).find(function(i){return String(i.id)===String(itemId);});
+  if(!item)return;
+  var en=document.getElementById('en');if(en)en.value=item.name;
+  var ep=document.getElementById('ep');if(ep)ep.value=item.planned;
+  var ea=document.getElementById('ea');if(ea){ea.value='';ea.focus();}
+  var sel=document.getElementById('es');if(sel)sel.value=String(item.stageId);
+  var cat=document.getElementById('ec');if(cat)cat.value=item.cat;
+  window._prefillItemId=String(itemId);
+  var card=document.querySelector('.card');if(card)card.scrollIntoView({behavior:'smooth'});
+  toast('Введіть фактичну суму ↓');
+}
+
+function toggleExpDetails(){
+  var d=document.getElementById('exp-details');
+  var a=document.getElementById('exp-details-arrow');
+  if(!d)return;
+  if(d.style.display==='none'){d.style.display='block';if(a)a.textContent='▼';}
+  else{d.style.display='none';if(a)a.textContent='▶';}
+}
+
+document.addEventListener('input',function(e){
+  if(e.target.id==='ep'||e.target.id==='ea'){
+    var p=parseFloat(document.getElementById('ep').value)||0;
+    var a=parseFloat(document.getElementById('ea').value)||0;
+    var bl=document.getElementById('delta-bl');
+    if(!bl)return;
+    if(p>0&&a>0){
+      var d=a-p;
+      var bv=document.getElementById('delta-val');
+      var bt=document.getElementById('delta-txt');
+      bl.style.display='block';
+      if(d>0){if(bv)bv.className='db do',bv.textContent='▲ +'+fmt(d)+' ₴ дорожче ніж план';if(bt)bt.textContent='Замовник побачить різницю і коментар';}
+      else if(d<0){if(bv)bv.className='db du',bv.textContent='▼ '+fmt(Math.abs(d))+' ₴ дешевше ніж план';if(bt)bt.textContent='Економія';}
+      else{if(bv)bv.className='db dn',bv.textContent='✓ Точно за планом';if(bt)bt.textContent='';}
+    }else{bl.style.display='none';}
+  }
+});
+
+// ── НАЛАШТУВАННЯ ──
 async function saveUrl(){
   S.url=document.getElementById('su').value.trim();save();
   if(!S.url){toast('Введіть URL');return;}
@@ -724,349 +1130,86 @@ function saveProj(){
 }
 function copyLink(){
   if(!S.url||!S.pid){toast('Спочатку налаштуйте підключення');go('settings');return;}
-  var base=window.location.href.replace(/[^\/]*$/, '');
+  var base=window.location.href.replace(/[^\/]*$/,'');
   var link=base+'index.html?url='+encodeURIComponent(S.url)+'&pid='+encodeURIComponent(S.pid)+'&name='+encodeURIComponent(S.pname||'');
-  navigator.clipboard.writeText(link).then(()=>toast('Посилання скопійовано!')).catch(()=>prompt('Посилання:',link));
+  navigator.clipboard.writeText(link).then(function(){toast('Посилання скопійовано!');}).catch(function(){prompt('Посилання:',link);});
 }
 function copyScript(){
-  navigator.clipboard.writeText(SCRIPT_CODE).then(()=>toast('Код скопійовано!')).catch(()=>prompt('Код:',SCRIPT_CODE));
+  navigator.clipboard.writeText(SCRIPT_CODE).then(function(){toast('Код скопійовано!');}).catch(function(){prompt('Код:',SCRIPT_CODE);});
+}
+function exportJ(){
+  var b=new Blob([JSON.stringify({date:new Date().toISOString(),project:S.pname,stages:S.stages,expenses:S.expenses},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='prorab-export.json';a.click();
+}
+function clearAll(){
+  if(!confirm('Видалити всі дані проєкту? Налаштування підключення збережуться.'))return;
+  S.stages=[];S.expenses=[];S.plannedItems=[];S.pending=false;
+  save();renderProject();renderExpList();
+  toast('Дані видалено. Налаштування збережені.');
 }
 
-async function sync(action,data){
-  if(!S.url) return false;
-  try{
-    var r=await fetch(S.url+'?action='+action+'&pid='+encodeURIComponent(S.pid||'default'),{method:'POST',body:JSON.stringify(data),headers:{'Content-Type':'text/plain'}});
-    var j=await r.json();return j.ok;
-  }catch(e){return false;}
+// ── КАЛЬКУЛЯТОР ФУНДАМЕНТУ ──
+var ct='стрічковий';
+function setCT(t,el){
+  ct=t;
+  document.querySelectorAll('.tbtn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  var cwl=document.getElementById('cwl');var cpl=document.getElementById('cpl');
+  if(cwl)cwl.textContent=t==='плитний'?'Товщина плити':t==='стовпчастий'?'Діаметр стовпа':'Ширина стрічки';
+  if(cpl)cpl.textContent=t==='стовпчастий'?'Кількість стовпів':t==='плитний'?'Сторона плити':'Периметр';
+  runCalc();
 }
-
-// STAGES
-async function addStage(){
-  var name=document.getElementById('mn').value.trim();
-  var budget=parseFloat(document.getElementById('mb').value)||0;
-  if(!name||!budget){toast('Заповніть назву і бюджет');return;}
-  // Перевіряємо чи вже є схожий етап (по першому слову)
-  var firstName=name.split(' ')[0].toLowerCase();
-  var existing=S.stages.find(function(s){
-    return s.name.split(' ')[0].toLowerCase()===firstName;
-  });
-  if(existing){
-    if(confirm('Схожий етап «'+existing.name+'» вже існує. Оновити його бюджет на '+fmt(budget)+' ₴?')){
-      existing.budget=budget;
-      save();closeModal('m-stage');renderProject();fillStageSelect();toast('Бюджет оновлено!');
-      sync('updateStage',{id:existing.id,name:existing.name,budget:existing.budget});
-    }
-    return;
-  }
-  var stage={id:String(Date.now()),name:name,budget:budget,spent:0,status:'active'};
-  S.stages.push(stage);
-
-  // Якщо є планові позиції з калькулятора — додаємо їх як заплановані витрати
-  var items=window._calcItems||[];
-  var today=new Date().toLocaleDateString('uk-UA');
-  items.forEach(function(item){
-    S.plannedItems=S.plannedItems||[];
-    S.plannedItems.push({
-      id:String(Date.now()+Math.random()),
-      stageId:stage.id,
-      stageName:name,
-      name:item.name,
-      planned:item.planned,
-      cat:item.cat,
-      paid:false,
-      date:today
-    });
-  });
+function runCalc(){
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
+  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp=v*1.05,arm=v*100;
+  var mat=Math.round(vp*pc+arm*pa);
+  window._ctot=mat+Math.round(work)+Math.round(del);
+  var cr1=document.getElementById('cr1');if(cr1)cr1.textContent=vp.toFixed(1);
+  var cr2=document.getElementById('cr2');if(cr2)cr2.textContent=Math.round(arm);
+  var cr3=document.getElementById('cr3');if(cr3)cr3.textContent=(ct==='стрічковий'?p*2*(d+w):ct==='плитний'?p*p*2:0).toFixed(1);
+  var cr4=document.getElementById('cr4');if(cr4)cr4.textContent=v.toFixed(2);
+  var cm=document.getElementById('ctot-mat');if(cm)cm.textContent=fmt(mat)+' ₴';
+  var cw2=document.getElementById('ctot-work');if(cw2)cw2.textContent=fmt(work)+' ₴';
+  var cd=document.getElementById('ctot-del');if(cd)cd.textContent=fmt(del)+' ₴';
+  var ct2=document.getElementById('ctot');if(ct2)ct2.textContent=fmt(window._ctot)+' ₴';
+}
+function calcToStage(){
+  if(!window._ctot)return;
+  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
+  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
+  var vp=v*1.05,arm=v*100;
   window._calcItems=[];
-
-  save();
-  closeModal('m-stage');
-  document.getElementById('mn').value='';document.getElementById('mb').value='';
-  renderProject();fillStageSelect();
-  if(items.length){
-    toast('Етап додано! '+items.length+' позицій готові до оплати.');
-  } else {
-    toast('Етап додано!');
-  }
-  sync('addStage',{id:stage.id,name:stage.name,budget:stage.budget});
+  var cc=Math.round(vp*pc);var ca=Math.round(arm*pa);
+  if(cc>0)window._calcItems.push({name:'Бетон '+vp.toFixed(1)+' м³',planned:cc,cat:'Матеріали'});
+  if(ca>0)window._calcItems.push({name:'Арматура '+Math.round(arm)+' кг',planned:ca,cat:'Матеріали'});
+  if(work>0)window._calcItems.push({name:'Роботи',planned:Math.round(work),cat:'Роботи'});
+  if(del>0)window._calcItems.push({name:'Доставка',planned:Math.round(del),cat:'Транспорт'});
+  document.getElementById('mb').value=window._ctot;
+  document.getElementById('mn').value='Фундамент';
+  openModal('m-stage');
 }
 
-var _editBudgetId=null;
-function showEditBudget(id){
-  _editBudgetId=id;
-  var s=S.stages.find(function(x){return String(x.id)===String(id);});
-  if(!s) return;
-  document.getElementById('eb-stage-name').textContent='Етап: '+s.name+' · Поточний бюджет: '+fmt(s.budget)+' ₴';
-  document.getElementById('eb-budget').value=s.budget;
-  openModal('m-edit-budget');
-}
-function saveEditBudget(){
-  if(!_editBudgetId) return;
-  var newBudget=parseFloat(document.getElementById('eb-budget').value)||0;
-  if(!newBudget){toast('Введіть суму');return;}
-  var s=S.stages.find(function(x){return String(x.id)===String(_editBudgetId);});
-  if(s){
-    s.budget=newBudget;
-    save();
-    closeModal('m-edit-budget');
-    renderProject();
-    toast('Бюджет оновлено!');
-    // Синхронізуємо зміну в таблицю
-    sync('updateStage',{id:s.id,name:s.name,budget:s.budget});
-  }
-  _editBudgetId=null;
-}
-function showCloseModal(id){
-  _closingId=id;
-  var s=S.stages.find(x=>x.id===id);if(!s) return;
-  var left=s.budget-s.spent;
-  document.getElementById('mc-title').textContent='Закрити «'+s.name+'»';
-  document.getElementById('mc-text').textContent='Бюджет: '+fmt(s.budget)+' ₴\nВитрачено: '+fmt(s.spent)+' ₴\n'+(left>=0?'Економія: '+fmt(left)+' ₴':'Перевитрата: '+fmt(Math.abs(left))+' ₴')+'\n\nЗамовник отримає фінальний звіт.';
-  openModal('m-close');
-}
-async function doCloseStage(){
-  if(!_closingId) return;
-  var s=S.stages.find(function(x){return String(x.id)===String(_closingId);});
-  if(s){s.status='closed';S.pending=true;}
-  save();closeModal('m-close');renderProject();
-  toast('Закрито. Надішліть посилання замовнику.');
-  sync('closeStage',{id:_closingId});
-  _closingId=null;
-}
-
-function renderProject(){
-  recalcSpent();
-  var tb=S.stages.reduce((a,s)=>a+s.budget,0);
-  var ts=S.stages.reduce((a,s)=>a+s.spent,0);
-  var today=new Date().toLocaleDateString('uk-UA');
-  var tod=S.expenses.filter(e=>e.date===today).reduce((a,e)=>a+e.actual,0);
-  document.getElementById('h-rem').textContent=fmt(tb-ts)+' ₴';
-  document.getElementById('h-bud').textContent=fmt(tb)+' ₴';
-  document.getElementById('h-spe').textContent=fmt(ts)+' ₴';
-  document.getElementById('h-tod').textContent=fmt(tod)+' ₴';
-  document.getElementById('appr-block').style.display=S.pending?'block':'none';
-  var el=document.getElementById('stages-el');
-  if(!S.stages.length){el.innerHTML='<div class="empty"><div class="ic">🏗️</div><p>Немає жодного етапу.<br>Додайте перший нижче.</p></div>';return;}
-  el.innerHTML=S.stages.map(function(s){
-    var pct=s.budget>0?Math.min(100,Math.round(s.spent/s.budget*100)):0;
-    var left=s.budget-s.spent;
-    var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
-    var sc2=s.status==='closed'?'st-d':'st-a';
-    var sl=s.status==='closed'?'Закрито':'Активний';
-    var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ економія</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
-    var exps=S.expenses.filter(e=>String(e.stageId)===String(s.id)).slice(-3).reverse();
-    var exh=exps.map(function(e){
-      var d=e.actual-e.planned;
-      var dc=d>0?'neg':d<0?'pos':'neu';
-      return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+e.cat+(e.comment?' · '+e.comment:'')+'</div></div><div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'+':'')+fmt(d)+' ₴ від плану':'за планом')+'</div></div></div>';
-    }).join('');
-    var act=s.status==='closed'
-      ?'<div style="font-size:12px;color:var(--t3);text-align:center;padding:4px">Закрито · чекаємо підтвердження замовника</div>'
-      :'<div class="scact"><button class="sab pa" onclick="go(\'expense\')">+ Витрата</button><button class="sab" onclick="showEditBudget('+s.id+')" style="background:var(--s2);color:var(--t2)">Змінити бюджет</button><button class="sab pg" onclick="showCloseModal('+s.id+')">Закрити</button></div>';
-    return '<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(s.budget)+' ₴</span> · Витрачено: <span>'+fmt(s.spent)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin:10px 0">'+exh+'</div>':'')+act+'</div>';
-  }).join('');
-}
-
-// EXPENSES
-function recalcSpent(){
-  S.stages.forEach(function(s){
-    s.spent=S.expenses
-      .filter(function(e){return String(e.stageId)===String(s.id)&&!e.cancelled;})
-      .reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
-  });
-}
-
-function fillStageSelect(){
-  var sel=document.getElementById('es');if(!sel) return;
-  var active=S.stages.filter(function(s){return s.status==='active';});
-  sel.innerHTML='<option value="">— Оберіть етап —</option>'+active.map(function(s){return '<option value="'+String(s.id)+'">'+s.name+'</option>';}).join('');
-  if(active.length===1) sel.value=String(active[0].id);
-}
-
-function renderPlannedItems(){
-  var items=(S.plannedItems||[]).filter(i=>!i.paid);
-  var block=document.getElementById('planned-items-block');
-  var list=document.getElementById('planned-items-list');
-  if(!block||!list) return;
-  if(!items.length){block.style.display='none';return;}
-  block.style.display='block';
-  list.innerHTML=items.map(function(item){
-    return '<div class="ci" style="margin-bottom:6px;border:1.5px solid var(--accent);cursor:pointer" onclick="prefillExpense(\''+item.id+'\')">' +
-      '<div><div class="cn">'+item.name+'</div><div class="cm">'+item.stageName+' · '+item.cat+'</div></div>' +
-      '<div class="cr"><div class="ca" style="color:var(--accent)">'+fmt(item.planned)+' ₴</div><div class="ccat">план · натисніть оплатити</div></div>' +
-      '</div>';
-  }).join('');
-}
-
-function prefillExpense(itemId){
-  var item=(S.plannedItems||[]).find(function(i){return String(i.id)===String(itemId);});
-  if(!item) return;
-  document.getElementById('en').value=item.name;
-  document.getElementById('ep').value=item.planned;
-  document.getElementById('ea').value='';
-  var sel=document.getElementById('es');
-  if(sel){
-    sel.value=item.stageId;
-    if(!sel.value) {
-      for(var i=0;i<sel.options.length;i++){
-        if(sel.options[i].text===item.stageName){sel.selectedIndex=i;break;}
-      }
-    }
-  }
-  var catSel=document.getElementById('ec');
-  if(catSel) catSel.value=item.cat;
-  window._prefillItemId=itemId;
-  document.getElementById('ep').dispatchEvent(new Event('input'));
-  document.getElementById('ea').focus();
-  document.querySelector('.card').scrollIntoView({behavior:'smooth'});
-  toast('Введіть фактичну суму ↓');
-}
-
-function calcExpTotal(){
-  var q=parseFloat(document.getElementById('eq').value)||0;
-  var p=parseFloat(document.getElementById('eup').value)||0;
-  if(q>0&&p>0){
-    document.getElementById('ea').value=Math.round(q*p);
-  }
-}
-
-function toggleExpDetails(){
-  var d=document.getElementById('exp-details');
-  var a=document.getElementById('exp-details-arrow');
-  if(d.style.display==='none'){d.style.display='block';a.textContent='▼';}
-  else{d.style.display='none';a.textContent='▶';}
-}
-
-document.addEventListener('input',function(e){
-  if(e.target.id==='ep'||e.target.id==='ea'){
-    var p=parseFloat(document.getElementById('ep').value)||0;
-    var a=parseFloat(document.getElementById('ea').value)||0;
-    if(p>0&&a>0){
-      var d=a-p;var bl=document.getElementById('delta-bl');var bv=document.getElementById('delta-val');var bt=document.getElementById('delta-txt');
-      bl.style.display='block';
-      if(d>0){bv.className='db do';bv.textContent='▲ +'+fmt(d)+' ₴ дорожче ніж план';bt.textContent='Замовник побачить різницю і коментар';}
-      else if(d<0){bv.className='db du';bv.textContent='▼ '+fmt(Math.abs(d))+' ₴ дешевше ніж план';bt.textContent='Економія — замовник також побачить';}
-      else{bv.className='db dn';bv.textContent='✓ Точно за планом';bt.textContent='';}
-    } else {
-      document.getElementById('delta-bl').style.display='none';
-    }
-  }
-});
-
-async function addExp(){
-  var name=document.getElementById('en').value.trim();
-  var qty=parseFloat(document.getElementById('eq').value)||0;
-  var unit=document.getElementById('eu').value;
-  var unitPrice=parseFloat(document.getElementById('eup').value)||0;
-  var actual=parseFloat(document.getElementById('ea').value)||0;
-  var planned=parseFloat(document.getElementById('ep').value)||0;
-  var sid=document.getElementById('es').value;
-  if(!sid){toast('Оберіть етап');return;}
-  // Шукаємо по id як рядок і як число
-  var stage=S.stages.find(function(s){return String(s.id)===String(sid);});
-  if(!name){toast('Введіть що купили');return;}
-  if(!actual){toast('Введіть суму');return;}
-  if(!stage){toast('Оберіть етап');return;}
-  var fullName=name;
-  if(qty>0) fullName=name+(qty>0?' '+qty+' '+unit:'')+(unitPrice>0?' по '+fmt(unitPrice)+' ₴':'');
-  var delta=planned>0?actual-planned:0;
-  var exp={id:Date.now(),name:fullName,planned:planned,actual:actual,stageId:String(sid),cat:document.getElementById('ec').value,comment:document.getElementById('ecm').value.trim(),date:new Date().toLocaleDateString('uk-UA'),delta:delta};
-  S.expenses.push(exp);
-  stage.spent=(stage.spent||0)+actual;
-  if(planned>0&&Math.abs(delta)>0) S.pending=true;
-  if(window._prefillItemId){
-    var pi=(S.plannedItems||[]).find(function(i){return String(i.id)===String(window._prefillItemId);});
-    if(pi) pi.paid=true;
-    window._prefillItemId=null;
-  }
-  save();
-  document.getElementById('en').value='';
-  document.getElementById('eq').value='';
-  document.getElementById('eup').value='';
-  document.getElementById('ea').value='';
-  document.getElementById('ecm').value='';
-  document.getElementById('delta-bl').style.display='none';
-  document.getElementById('exp-details').style.display='none';
-  document.getElementById('exp-details-arrow').textContent='▶';
-  renderExpList();renderPlannedItems();renderProject();toast('Зафіксовано!');
-  var ok=await sync('addExpense',{date:exp.date,name:exp.name,planned:exp.planned,actual:exp.actual,stage:stage?stage.name:'',cat:exp.cat,comment:exp.comment});
-  if(ok) toast('Збережено ✓');
-}
-
-function deleteExp(id){
-  if(!confirm('Видалити цю витрату?')) return;
-  var exp=S.expenses.find(function(e){return e.id===id;});
-  if(!exp) return;
-  var stage=S.stages.find(function(s){return String(s.id)===String(exp.stageId);});
-  if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
-  S.expenses=S.expenses.filter(function(e){return e.id!==id;});
-  save();renderExpList();renderProject();toast('Видалено');
-}
-
-function cancelExpense(id){
-  var exp=S.expenses.find(function(e){return e.id===id;});
-  if(!exp) return;
-  if(exp.cancelled){toast('Вже скасовано');return;}
-  if(!confirm('Скасувати витрату «'+exp.name+'»?\nВ таблицю додасться запис скасування.')) return;
-  // Позначаємо як скасовану
-  exp.cancelled=true;
-  // Зменшуємо витрачено по етапу
-  var stage=S.stages.find(function(s){return String(s.id)===String(exp.stageId);});
-  if(stage) stage.spent=Math.max(0,stage.spent-exp.actual);
-  // Додаємо запис скасування в Google Sheets
-  sync('addExpense',{
-    date:new Date().toLocaleDateString('uk-UA'),
-    name:exp.name,
-    planned:0,
-    actual:-exp.actual,
-    stage:stage?stage.name:'',
-    cat:exp.cat,
-    comment:'скасування'
-  });
-  save();renderExpList();renderProject();
-  toast('Скасовано — таблиця оновлена');
-}
-
-function renderExpList(){
-  var el=document.getElementById('exp-list');if(!el) return;
-  if(!S.expenses.length){el.innerHTML='<div class="empty"><div class="ic">📋</div><p>Витрат ще немає.<br>Додайте першу витрату вище.</p></div>';return;}
-  el.innerHTML=[...S.expenses].reverse().slice(0,30).map(function(e){
-    var s=S.stages.find(function(x){return String(x.id)===String(e.stageId);});
-    var deltaHtml='';
-    if(e.planned>0){
-      var d=e.delta||0;
-      var dc=d>0?'neg':d<0?'pos':'neu';
-      deltaHtml='<div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div>';
-    }
-    var cancelledStyle=e.cancelled?'opacity:.4;text-decoration:line-through;':'';
-    var cancelBtn=!e.cancelled?'<button onclick="cancelExpense('+e.id+')" style="flex-shrink:0;height:28px;padding:0 10px;border-radius:var(--rs);border:1px solid var(--border);background:var(--surface);font-size:11px;font-weight:600;color:var(--red);cursor:pointer;white-space:nowrap">Скасувати</button>':'<span style="font-size:11px;color:var(--t3)">Скасовано</span>';
-    return '<div class="ci" style="'+cancelledStyle+'align-items:flex-start;flex-wrap:wrap;gap:6px">'+
-      '<div style="flex:1;min-width:0"><div class="cn">'+e.name+'</div><div class="cm">'+e.date+' · '+(s?s.name:'—')+(e.comment?' · '+e.comment:'')+'</div></div>'+
-      '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'+
-      '<div class="cr"><div class="ca">'+fmt(e.actual)+' ₴</div>'+deltaHtml+'</div>'+
-      cancelBtn+
-      '</div></div>';
-  }).join('');
-}
-
-// ── CALC SELECTOR ──
+// ── ІНШІ КАЛЬКУЛЯТОРИ ──
 function showCalc(name,el){
-  ['fund','walls','roof','floor','windows','tile'].forEach(function(c){document.getElementById('calc-'+c).style.display=c===name?'block':'none';});
+  ['fund','walls','roof','floor','windows','tile'].forEach(function(c){
+    var el2=document.getElementById('calc-'+c);if(el2)el2.style.display=c===name?'block':'none';
+  });
   document.querySelectorAll('.calc-sel-btn').forEach(function(b){b.classList.remove('on');});
   el.classList.add('on');
-  if(name==='fund') runCalc();
-  if(name==='walls') calcWalls();
-  if(name==='roof') calcRoof();
-  if(name==='floor') calcFloor();
-  if(name==='windows') calcWindows();
-  if(name==='tile') calcTile();
+  if(name==='fund')runCalc();
+  if(name==='walls')calcWalls();
+  if(name==='roof')calcRoof();
+  if(name==='floor')calcFloor();
+  if(name==='windows')calcWindows();
+  if(name==='tile')calcTile();
 }
+function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
 
-// ── WALLS ──
 var wallType='газоблок';
 function setWallType(t,el){wallType=t;document.querySelectorAll('#calc-walls .tbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');var lbl=document.getElementById('w-mat-label');if(lbl)lbl.textContent=t.charAt(0).toUpperCase()+t.slice(1)+' / м³';calcWalls();}
 function calcWalls(){
-  var perim=nc2('w-perim'),height=nc2('w-height'),thick=nc2('w-thick'),openings=nc2('w-openings'),matprice=nc2('w-matprice'),mortarprice=nc2('w-mortarprice'),work=nc2('w-work');
+  var perim=nc('w-perim'),height=nc('w-height'),thick=nc('w-thick'),openings=nc('w-openings'),matprice=nc('w-matprice'),mortarprice=nc('w-mortarprice'),work=nc('w-work');
   var wallArea=Math.max(0,perim*height-openings);var vol=wallArea*thick;var volPlus=vol*1.05;var mortar=vol*0.1*1.1;
   var totMat=Math.round(volPlus*matprice+mortar*mortarprice);var tot=totMat+Math.round(work);
   set('w-r1',wallArea.toFixed(1));set('w-r2',vol.toFixed(2));set('w-r3',mortar.toFixed(2));set('w-r4',volPlus.toFixed(2));
@@ -1074,12 +1217,11 @@ function calcWalls(){
 }
 function calcWallsToStage(){if(!window._wallsTotal)return;document.getElementById('mb').value=window._wallsTotal;document.getElementById('mn').value='Коробка (стіни)';openModal('m-stage');}
 
-// ── ROOF ──
 var roofType='двосхилий';
 function setRoofType(t,el){roofType=t;document.querySelectorAll('#calc-roof .tbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');calcRoof();}
 function calcRoof(){
-  var area=nc2('r-area'),angle=nc2('r-angle'),covprice=nc2('r-covprice'),woodprice=nc2('r-woodprice'),work=nc2('r-work');
-  var coef=roofType==='плоский'?1:1/Math.cos(angle*Math.PI/180)*(roofType==='вальмовий'?1.4:roofType==='односхилий'?1:1.1);
+  var area=nc('r-area'),angle=nc('r-angle'),covprice=nc('r-covprice'),woodprice=nc('r-woodprice'),work=nc('r-work');
+  var coef=roofType==='плоский'?1:1/Math.cos(angle*Math.PI/180)*(roofType==='вальмовий'?1.4:1.1);
   var roofArea=area*coef;var roofPlus=roofArea*1.1;
   var totCov=Math.round(roofPlus*covprice);var totWood=Math.round(roofPlus*woodprice);var tot=totCov+totWood+Math.round(work);
   set('r-r1',roofArea.toFixed(1));set('r-r2',roofPlus.toFixed(1));
@@ -1087,29 +1229,26 @@ function calcRoof(){
 }
 function calcRoofToStage(){if(!window._roofTotal)return;document.getElementById('mb').value=window._roofTotal;document.getElementById('mn').value='Дах';openModal('m-stage');}
 
-// ── FLOOR ──
 function calcFloor(){
-  var area=nc2('fl-area'),thick=nc2('fl-thick'),concprice=nc2('fl-concprice'),insprice=nc2('fl-insprice'),work=nc2('fl-work');
+  var area=nc('fl-area'),thick=nc('fl-thick'),concprice=nc('fl-concprice'),insprice=nc('fl-insprice'),work=nc('fl-work');
   var vol=area*thick*1.05;var totConc=Math.round(vol*concprice);var totIns=Math.round(area*insprice);var tot=totConc+totIns+Math.round(work);
   set('fl-r1',vol.toFixed(2));set('fl-r2',area.toFixed(1));
   set('fl-tot-conc',fmt(totConc)+' ₴');set('fl-tot-ins',fmt(totIns)+' ₴');set('fl-tot-work',fmt(Math.round(work))+' ₴');set('fl-tot',fmt(tot)+' ₴');window._floorTotal=tot;
 }
 function calcFloorToStage(){if(!window._floorTotal)return;document.getElementById('mb').value=window._floorTotal;document.getElementById('mn').value='Підлога / стяжка';openModal('m-stage');}
 
-// ── WINDOWS ──
 function calcWindows(){
-  var winCount=nc2('win-count'),winArea=nc2('win-area'),doorExt=nc2('door-ext'),doorInt=nc2('door-int');
-  var winPrice=nc2('win-price'),doorExtPrice=nc2('door-ext-price'),doorIntPrice=nc2('door-int-price'),work=nc2('win-work');
+  var winCount=nc('win-count'),winArea=nc('win-area'),doorExt=nc('door-ext'),doorInt=nc('door-int');
+  var winPrice=nc('win-price'),doorExtPrice=nc('door-ext-price'),doorIntPrice=nc('door-int-price'),work=nc('win-work');
   var totWin=Math.round(winCount*winArea*winPrice);var totExt=Math.round(doorExt*doorExtPrice);var totInt=Math.round(doorInt*doorIntPrice);var tot=totWin+totExt+totInt+Math.round(work);
   set('win-tot-win',fmt(totWin)+' ₴');set('win-tot-ext',fmt(totExt)+' ₴');set('win-tot-int',fmt(totInt)+' ₴');set('win-tot-work',fmt(Math.round(work))+' ₴');set('win-tot',fmt(tot)+' ₴');window._windowsTotal=tot;
 }
 function calcWindowsToStage(){if(!window._windowsTotal)return;document.getElementById('mb').value=window._windowsTotal;document.getElementById('mn').value='Вікна та двері';openModal('m-stage');}
 
-// ── TILE ──
 var tileSize=0.09;
 function setTileSize(s,el){tileSize=s;document.querySelectorAll('#calc-tile .tbtn').forEach(function(b){b.classList.remove('on');});el.classList.add('on');calcTile();}
 function calcTile(){
-  var area=nc2('ti-area'),price=nc2('ti-price'),glueprice=nc2('ti-glueprice'),groutprice=nc2('ti-groutprice'),workprice=nc2('ti-workprice');
+  var area=nc('ti-area'),price=nc('ti-price'),glueprice=nc('ti-glueprice'),groutprice=nc('ti-groutprice'),workprice=nc('ti-workprice');
   var areaPlus=area*1.1;var count=Math.ceil(areaPlus/tileSize);
   var totTile=Math.round(areaPlus*price);var totGlue=Math.round(area*glueprice);var totGrout=Math.round(area*groutprice);var totWork=Math.round(area*workprice);var tot=totTile+totGlue+totGrout+totWork;
   set('ti-r1',areaPlus.toFixed(1));set('ti-r2',String(count));
@@ -1117,274 +1256,190 @@ function calcTile(){
 }
 function calcTileToStage(){if(!window._tileTotal)return;document.getElementById('mb').value=window._tileTotal;document.getElementById('mn').value='Плитка';openModal('m-stage');}
 
-function nc2(id){var el=document.getElementById(id);return el?parseFloat(el.value)||0:0;}
-function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+// ── ОНБОРДИНГ ──
+var OB={type:'',floors:0,wall:'',area:0,total:0,stagesData:[]};
 
-// CALC
-var ct='стрічковий';
-function setCT(t,el){ct=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));el.classList.add('on');document.getElementById('cwl').textContent=t==='плитний'?'Товщина плити':t==='стовпчастий'?'Діаметр стовпа':'Ширина стрічки';document.getElementById('cpl').textContent=t==='стовпчастий'?'Кількість стовпів':t==='плитний'?'Сторона плити':'Периметр';runCalc();}
-function nc(id){return parseFloat(document.getElementById(id).value)||0;}
-function runCalc(){
-  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc=nc('cpc'),pa=nc('cpa'),work=nc('cwork'),del=nc('cdel');
-  var v=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
-  var vp=v*1.05,arm=v*100,form=p*d*2,mat=vp*pc+arm*pa,tot=mat+work+del;
-  document.getElementById('cr1').textContent=vp.toFixed(1);
-  document.getElementById('cr2').textContent=fmt(arm);
-  document.getElementById('cr3').textContent=form.toFixed(1);
-  document.getElementById('cr4').textContent=v.toFixed(1);
-  document.getElementById('ctot-mat').textContent=fmt(mat)+' ₴';
-  document.getElementById('ctot-work').textContent=fmt(work)+' ₴';
-  document.getElementById('ctot-del').textContent=fmt(del)+' ₴';
-  document.getElementById('ctot').textContent=fmt(tot)+' ₴';
-  window._ctot=Math.round(tot);
+function selectType(t){
+  OB.type=t;
+  document.querySelectorAll('.ob-type-btn').forEach(function(b){b.classList.remove('sel');});
+  var el=document.getElementById('type-'+t);if(el)el.classList.add('sel');
+  var btn=document.getElementById('ob-next1');
+  if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';}
 }
-function calcToStage(){
-  if(!window._ctot) return;
-  var p=nc('cp'),d=nc('cd'),w=nc('cw'),pc2=nc('cpc'),pa2=nc('cpa'),work2=nc('cwork'),del2=nc('cdel');
-  var v2=ct==='плитний'?p*p*w:ct==='стовпчастий'?Math.PI*(w/2)*(w/2)*d*Math.max(1,p):p*d*w;
-  var vp2=v2*1.05,arm2=v2*100;
-  var costConcrete=Math.round(vp2*pc2);
-  var costArm=Math.round(arm2*pa2);
-  window._calcItems=[];
-  if(costConcrete>0) window._calcItems.push({name:'Бетон '+vp2.toFixed(1)+' м³',planned:costConcrete,cat:'Матеріали'});
-  if(costArm>0) window._calcItems.push({name:'Арматура '+Math.round(arm2)+' кг',planned:costArm,cat:'Матеріали'});
-  if(work2>0) window._calcItems.push({name:'Роботи',planned:Math.round(work2),cat:'Роботи'});
-  if(del2>0) window._calcItems.push({name:'Доставка',planned:Math.round(del2),cat:'Транспорт'});
-  document.getElementById('mb').value=window._ctot;
-  document.getElementById('mn').value='Фундамент ('+ct+')';
-  openModal('m-stage');
+function selectFloors(f,el){
+  OB.floors=f;
+  document.querySelectorAll('.ob-floor-btn').forEach(function(b){b.classList.remove('sel');});
+  el.classList.add('sel');obCheckStep2();
 }
-
-function exportJ(){
-  var b=new Blob([JSON.stringify({date:new Date().toISOString(),project:S.pname,stages:S.stages,expenses:S.expenses},null,2)],{type:'application/json'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='prorab-'+(S.pid||'export')+'-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+function selectWall(w,el){
+  OB.wall=w;
+  document.querySelectorAll('.ob-wall-btn').forEach(function(b){b.classList.remove('sel');});
+  el.classList.add('sel');obCheckStep2();
 }
-function clearAll(){if(!confirm('Видалити дані проєкту? Налаштування підключення збережуться.')) return;S.stages=[];S.expenses=[];S.plannedItems=[];S.pending=false;save();renderProject();toast('Дані проєкту видалено. Налаштування збережені.');}
-
-load();recalcSpent();renderProject();runCalc();fillStageSelect();
-
-// Якщо відкрито як сторінка замовника — показуємо клієнтський вид
-(function(){
-  var params=new URLSearchParams(window.location.search);
-  var clientUrl=params.get('url');
-  var clientPid=params.get('pid');
-  var clientName=params.get('name');
-  if(clientUrl&&clientPid){
-    document.querySelector('.hdr').innerHTML='<div class="logo">Прораб<span>.</span>Бюджет</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px" id="proj-title">Завантаження...</div>';
-    document.querySelector('.nav').style.display='none';
-    document.querySelectorAll('.scr').forEach(s=>s.style.display='none');
-    var wrap=document.createElement('div');
-    wrap.className='wrap';
-    wrap.id='client-wrap';
-    wrap.innerHTML='<div id="client-content"><div style="text-align:center;padding:48px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:12px">⏳</div><p style="font-size:14px">Завантажуємо дані...</p></div></div>';
-    document.body.appendChild(wrap);
-    if(clientName) document.getElementById('proj-title').textContent=decodeURIComponent(clientName);
-    document.title='Кошторис — '+(clientName?decodeURIComponent(clientName):'Об\'єкт');
-    function loadClientData(){
-      fetch(clientUrl+'?action=getData&pid='+encodeURIComponent(clientPid))
-        .then(function(r){return r.json();})
-        .then(function(data){renderClient(data);})
-        .catch(function(){
-          document.getElementById('client-content').innerHTML='<div style="background:var(--rl);border:1px solid var(--red);border-radius:var(--r);padding:16px;color:var(--red);font-size:13px;line-height:1.6;margin-bottom:12px">Не вдалось завантажити дані. Перевірте інтернет.</div><button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2)">Оновити</button>';
-        });
-    }
-    window.loadClientData=loadClientData;
-    function renderClient(data){
-      var stages=data.stages||[];
-      var allExp=data.expenses||[];
-      // Виключаємо скасовані записи (де коментар = 'скасування') з показу замовнику
-      // Але враховуємо від'ємні суми для правильного підрахунку
-      var ts=allExp.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
-      var tb=stages.reduce(function(a,s){return a+(parseFloat(s.budget)||0);},0);
-      var html='<div class="hero"><div class="hl">Залишилось на об\'єкті</div><div class="ha">'+fmt(tb-ts)+' ₴</div><div class="hrow"><div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(tb)+' ₴</div></div><div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(Math.max(0,ts))+' ₴</div></div></div></div>';
-      if(stages.length){
-        html+='<div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>';
-        stages.forEach(function(s){
-          var se=allExp.filter(function(e){return e.stage===s.name;});
-          var sp=se.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
-          sp=Math.max(0,sp);
-          var bud=parseFloat(s.budget)||0;
-          var pct=bud>0?Math.min(100,Math.round(sp/bud*100)):0;
-          var left=bud-sp;
-          var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
-          var sc2=s.status==='closed'?'st-d':'st-a';
-          var sl=s.status==='closed'?'Закрито':'В роботі';
-          var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
-          // Показуємо тільки не скасовані витрати замовнику
-          var visExp=se.filter(function(e){return e.comment!=='скасування'&&parseFloat(e.actual)>0;});
-          var exh=visExp.slice(-5).reverse().map(function(e){
-            var d=parseFloat(e.delta)||0;var dc=d>0?'neg':d<0?'pos':'neu';
-            return '<div class="ci"><div><div class="cn">'+e.name+'</div><div class="cm">'+e.date+(e.comment&&e.comment!=='скасування'?' · '+e.comment:'')+'</div></div><div><div class="ca">'+fmt(parseFloat(e.actual))+' ₴</div><div class="ccat '+dc+'">'+(d!==0?(d>0?'▲ +':'▼ ')+fmt(Math.abs(d))+' від плану':'за планом')+'</div></div></div>';
-          }).join('');
-          html+='<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div><div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div><div class="scnums">Бюджет: <span>'+fmt(bud)+' ₴</span> · Витрачено: <span>'+fmt(sp)+' ₴</span> · '+pct+'%</div>'+dh+(exh?'<div style="margin-top:10px">'+exh+'</div>':'')+'</div>';
-        });
-      }else{
-        html+='<div style="text-align:center;padding:32px;color:var(--t3);font-size:13px">Прораб ще не додав жодного етапу</div>';
-      }
-      html+='<button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2);margin-bottom:12px">Оновити дані</button>';
-      html+='<div style="font-size:11px;color:var(--t3);text-align:center;padding:12px 0">Оновлено: '+new Date().toLocaleString('uk-UA')+'</div>';
-      document.getElementById('client-content').innerHTML=html;
-    }
-    loadClientData();
-    setInterval(loadClientData,60000);
-  }
-})();
-
-// ── ONBOARDING ──
-var OB = { type: '', floors: 0, wall: '', area: 0 };
-
-// Стилі для онбордингу
-(function(){
-  var s = document.createElement('style');
-  s.textContent = '.ob-type-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px 10px;text-align:center;cursor:pointer;transition:all .15s}.ob-type-btn.sel{border-color:var(--accent);background:var(--al)}.ob-floor-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px 6px;text-align:center;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}.ob-floor-btn.sel{border-color:var(--accent);color:var(--accent);background:var(--al)}.ob-wall-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--rs);padding:12px 14px;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}.ob-wall-btn.sel{border-color:var(--accent);background:var(--al)}';
-  document.head.appendChild(s);
-})();
-
-function selectType(t) {
-  OB.type = t;
-  document.querySelectorAll('.ob-type-btn').forEach(function(b){ b.classList.remove('sel'); });
-  document.getElementById('type-'+t).classList.add('sel');
-  var btn = document.getElementById('ob-next1');
-  btn.style.opacity = '1'; btn.style.pointerEvents = 'auto';
+function obCheckStep2(){
+  OB.area=parseFloat(document.getElementById('ob-area').value)||0;
+  var ok=OB.area>0&&OB.floors>0&&OB.wall;
+  var btn=document.getElementById('ob-next2');
+  if(btn){btn.style.opacity=ok?'1':'.4';btn.style.pointerEvents=ok?'auto':'none';}
 }
-
-function selectFloors(f, el) {
-  OB.floors = f;
-  document.querySelectorAll('.ob-floor-btn').forEach(function(b){ b.classList.remove('sel'); });
-  el.classList.add('sel');
-  obCheckStep2();
+function obStep1(){
+  document.getElementById('ob-step1').style.display='block';
+  document.getElementById('ob-step2').style.display='none';
+  document.getElementById('ob-step3').style.display='none';
+  document.getElementById('ob-step4').style.display='none';
 }
-
-function selectWall(w, el) {
-  OB.wall = w;
-  document.querySelectorAll('.ob-wall-btn').forEach(function(b){ b.classList.remove('sel'); });
-  el.classList.add('sel');
-  obCheckStep2();
-}
-
-function obCheckStep2() {
-  OB.area = parseFloat(document.getElementById('ob-area').value) || 0;
-  var ok = OB.area > 0 && OB.floors > 0 && OB.wall;
-  var btn = document.getElementById('ob-next2');
-  btn.style.opacity = ok ? '1' : '.4';
-  btn.style.pointerEvents = ok ? 'auto' : 'none';
-}
-
-function obStep1() {
-  document.getElementById('ob-step1').style.display = 'block';
-  document.getElementById('ob-step2').style.display = 'none';
-  document.getElementById('ob-step3').style.display = 'none';
-}
-
-function obStep2() {
+function obStep2(){
   document.getElementById('ob-step1').style.display='none';
   document.getElementById('ob-step2').style.display='block';
   document.getElementById('ob-step3').style.display='none';
   document.getElementById('ob-step4').style.display='none';
 }
-
 function obStep3back(){
   document.getElementById('ob-step4').style.display='none';
   document.getElementById('ob-step3').style.display='block';
 }
+function obCalculate(){
+  OB.area=parseFloat(document.getElementById('ob-area').value)||0;
+  if(!OB.area||!OB.floors||!OB.wall)return;
+  var wallCoef={Газоблок:8500,Цегла:11000,Каркас:7000,Монолітний:13000};
+  var base=wallCoef[OB.wall]||9000;
+  var floorCoef=OB.floors===1?1:OB.floors===2?1.7:OB.floors===3?2.3:1.85;
+  var total=Math.round(OB.area*base*floorCoef);
+  OB.total=total;
+  OB.stagesData=[
+    {name:'Фундамент',pct:0.18},{name:'Коробка (стіни)',pct:0.28},{name:'Дах',pct:0.15},
+    {name:'Вікна і двері',pct:0.10},{name:'Оздоблення',pct:0.20},{name:'Комунікації',pct:0.09}
+  ].map(function(st){return{name:st.name,budget:Math.round(total*st.pct)};});
 
+  document.getElementById('ob-total').textContent=fmt(total)+' ₴';
+  document.getElementById('ob-obj-label').textContent=OB.type+' · '+OB.area+' м² · '+(OB.floors===0?'1+мансарда':OB.floors+' '+(OB.floors===1?'поверх':'поверхи'))+' · '+OB.wall;
+  var grid=document.getElementById('ob-stages-grid');
+  if(grid)grid.innerHTML=OB.stagesData.map(function(st){
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px"><div style="font-size:11px;color:var(--t3);margin-bottom:3px">'+st.name+'</div><div style="font-size:15px;font-weight:700;color:var(--text)">'+fmt(st.budget)+' ₴</div></div>';
+  }).join('');
+
+  document.getElementById('ob-step2').style.display='none';
+  document.getElementById('ob-step3').style.display='block';
+}
 function obStep4(){
   document.getElementById('ob-step3').style.display='none';
   document.getElementById('ob-step4').style.display='block';
   var list=document.getElementById('ob-budget-list');
+  if(!list)return;
   list.innerHTML=OB.stagesData.map(function(st,i){
     return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px">'+
       '<div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">'+st.name+'</div>'+
       '<div style="display:flex;align-items:center;gap:8px">'+
       '<input type="number" id="ob-budget-'+i+'" value="'+st.budget+'" inputmode="decimal" '+
-      'style="flex:1;height:44px;border:1px solid var(--border);border-radius:var(--rs);padding:0 12px;font-size:15px;font-family:Manrope,sans-serif;font-weight:600;color:#0000FF;background:var(--surface)">'+
-      '<span style="font-size:13px;color:var(--t3);min-width:18px">₴</span>'+
-      '</div>'+
-      '<div style="font-size:11px;color:var(--t3);margin-top:4px">Приблизно: '+fmt(st.budget)+' ₴</div>'+
-      '</div>';
+      'style="flex:1;height:44px;border:1px solid var(--border);border-radius:var(--rs);padding:0 12px;font-size:15px;font-family:Manrope,sans-serif;font-weight:600;color:#0000AA;background:var(--surface)">'+
+      '<span style="font-size:13px;color:var(--t3)">₴</span></div>'+
+      '<div style="font-size:11px;color:var(--t3);margin-top:4px">Приблизно: '+fmt(st.budget)+' ₴</div></div>';
   }).join('');
 }
-
-function obCalculate() {
-  OB.area = parseFloat(document.getElementById('ob-area').value) || 0;
-  if (!OB.area || !OB.floors || !OB.wall) return;
-
-  // Коефіцієнти по типу стін (грн/м² загальної площі)
-  var wallCoef = { 'Газоблок': 8500, 'Цегла': 11000, 'Каркас': 7000, 'Монолітний': 13000 };
-  var base = wallCoef[OB.wall] || 9000;
-  var floorCoef = OB.floors === 1 ? 1 : OB.floors === 2 ? 1.7 : OB.floors === 3 ? 2.3 : 1.85;
-  var total = Math.round(OB.area * base * floorCoef);
-
-  // Розбивка по етапах (%)
-  var stages = [
-    { name: 'Фундамент', pct: 0.18 },
-    { name: 'Коробка (стіни)', pct: 0.28 },
-    { name: 'Дах', pct: 0.15 },
-    { name: 'Вікна і двері', pct: 0.10 },
-    { name: 'Оздоблення', pct: 0.20 },
-    { name: 'Комунікації', pct: 0.09 }
-  ];
-
-  document.getElementById('ob-total').textContent = fmt(total) + ' ₴';
-  document.getElementById('ob-obj-label').textContent = OB.type + ' · ' + OB.area + ' м² · ' + (OB.floors === 0 ? '1+мансарда' : OB.floors + ' ' + (OB.floors === 1 ? 'поверх' : 'поверхи')) + ' · ' + OB.wall;
-
-  var grid = document.getElementById('ob-stages-grid');
-  grid.innerHTML = stages.map(function(st) {
-    var sum = Math.round(total * st.pct);
-    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px"><div style="font-size:11px;color:var(--t3);margin-bottom:3px">'+st.name+'</div><div style="font-size:15px;font-weight:700;color:var(--text)">'+fmt(sum)+' ₴</div></div>';
-  }).join('');
-
-  // Зберігаємо для подальшого використання
-  OB.total = total;
-  OB.stagesData = stages.map(function(st) {
-    return { name: st.name, budget: Math.round(total * st.pct) };
+function obStart(){
+  // Читаємо уточнені суми
+  OB.stagesData.forEach(function(st,i){
+    var inp=document.getElementById('ob-budget-'+i);
+    if(inp){var v=parseFloat(inp.value)||0;if(v>0)st.budget=v;}
   });
-
-  document.getElementById('ob-step2').style.display = 'none';
-  document.getElementById('ob-step3').style.display = 'block';
-}
-
-function obStart() {
-  // Читаємо уточнені суми з кроку 4
-  if(OB.stagesData) {
-    OB.stagesData.forEach(function(st, i) {
-      var input = document.getElementById('ob-budget-'+i);
-      if(input) {
-        var val = parseFloat(input.value)||0;
-        if(val > 0) st.budget = val;
-      }
-    });
-  }
-  S.pname = OB.type + ' ' + OB.area + ' м²';
-  if (!S.pid) S.pid = 'prorab-' + Date.now();
-  localStorage.setItem('ob_done', '1');
-  // Додаємо всі етапи в S.stages
-  S.stages = [];
-  OB.stagesData.forEach(function(st) {
-    var stage = { id: String(Date.now() + Math.random()), name: st.name, budget: st.budget, spent: 0, status: 'active' };
-    S.stages.push(stage);
+  S.pname=OB.type+' '+OB.area+' м²';
+  if(!S.pid)S.pid='prorab-'+Date.now();
+  localStorage.setItem('ob_done','1');
+  // Додаємо всі етапи і одразу зберігаємо
+  S.stages=OB.stagesData.map(function(st){
+    return {id:String(Date.now()+Math.random()),name:st.name,budget:st.budget,spent:0,status:'active'};
   });
-  // Зберігаємо ВСЕ одразу
   save();
-  // Потім синхронізуємо в таблицю
-  S.stages.forEach(function(stage) {
-    sync('addStage', { id: stage.id, name: stage.name, budget: stage.budget });
+  // Синхронізуємо в таблицю
+  S.stages.forEach(function(stage){
+    sync('addStage',{id:stage.id,name:stage.name,budget:stage.budget});
   });
-  document.getElementById('onboarding').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
-  renderProject();
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('main-app').style.display='block';
   fillStageSelect();
-  updSync(); updLink();
+  recalcSpent();
+  renderProject();
+  updSync();updLink();
 }
 
-// Показуємо онбординг або одразу додаток
-if (!localStorage.getItem('ob_done') && !new URLSearchParams(window.location.search).get('url')) {
-  document.getElementById('onboarding').style.display = 'block';
-  document.getElementById('ob-step1').style.display = 'block';
-} else {
-  document.getElementById('main-app').style.display = 'block';
-}
+// ── СТОРІНКА ЗАМОВНИКА ──
+(function(){
+  var params=new URLSearchParams(window.location.search);
+  var clientUrl=params.get('url');
+  var clientPid=params.get('pid');
+  var clientName=params.get('name');
+  if(!clientUrl||!clientPid)return;
 
-</script>
-</body>
-</html>
+  document.querySelector('.hdr').innerHTML='<div class="logo">Прораб<span>.</span>Бюджет</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px" id="proj-title">Завантаження...</div>';
+  document.querySelector('.nav').style.display='none';
+  document.querySelectorAll('.scr').forEach(function(s){s.style.display='none';});
+
+  var wrap=document.createElement('div');
+  wrap.className='wrap';wrap.id='client-wrap';
+  wrap.innerHTML='<div id="client-content"><div style="text-align:center;padding:48px 20px;color:var(--t3)"><div style="font-size:36px;margin-bottom:12px">⏳</div><p style="font-size:14px">Завантажуємо дані...</p></div></div>';
+  document.body.appendChild(wrap);
+
+  if(clientName)document.getElementById('proj-title').textContent=decodeURIComponent(clientName);
+  document.title='Кошторис — '+(clientName?decodeURIComponent(clientName):'Об\'єкт');
+
+  function loadClientData(){
+    fetch(clientUrl+'?action=getData&pid='+encodeURIComponent(clientPid))
+      .then(function(r){return r.json();})
+      .then(function(data){renderClient(data);})
+      .catch(function(){
+        document.getElementById('client-content').innerHTML=
+          '<div style="background:var(--rl);border:1px solid var(--red);border-radius:var(--r);padding:16px;color:var(--red);font-size:13px;margin-bottom:12px">Не вдалось завантажити дані.</div>'+
+          '<button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2)">Оновити</button>';
+      });
+  }
+  window.loadClientData=loadClientData;
+
+  function renderClient(data){
+    var stages=data.stages||[];
+    var allExp=data.expenses||[];
+    var ts=allExp.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0);
+    var tb=stages.reduce(function(a,s){return a+(parseFloat(s.budget)||0);},0);
+    var html='<div class="hero"><div class="hl">Залишилось на об\'єкті</div><div class="ha">'+fmt(tb-ts)+' ₴</div>'+
+      '<div class="hrow"><div class="hstat"><div class="l">Загальний бюджет</div><div class="v">'+fmt(tb)+' ₴</div></div>'+
+      '<div class="hstat"><div class="l">Витрачено</div><div class="v">'+fmt(Math.max(0,ts))+' ₴</div></div></div></div>';
+    if(stages.length){
+      html+='<div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Етапи</div>';
+      stages.forEach(function(s){
+        var se=allExp.filter(function(e){return e.stage===s.name;});
+        var sp=Math.max(0,se.reduce(function(a,e){return a+(parseFloat(e.actual)||0);},0));
+        var bud=parseFloat(s.budget)||0;
+        var pct=bud>0?Math.min(100,Math.round(sp/bud*100)):0;
+        var left=bud-sp;
+        var bc=s.status==='closed'?'fg':pct>90?'fr':pct>70?'fa':'fg';
+        var sc2=s.status==='closed'?'st-d':'st-a';
+        var sl=s.status==='closed'?'Закрито':'В роботі';
+        var dh=left>=0?'<span class="db du">▼ '+fmt(left)+' ₴ залишок</span>':'<span class="db do">▲ '+fmt(Math.abs(left))+' ₴ перевитрата</span>';
+        html+='<div class="sc"><div class="sch"><div class="scn">'+s.name+'</div><span class="scs '+sc2+'">'+sl+'</span></div>'+
+          '<div class="scbar"><div class="scfill '+bc+'" style="width:'+pct+'%"></div></div>'+
+          '<div class="scnums">Бюджет: <span>'+fmt(bud)+' ₴</span> · Витрачено: <span>'+fmt(sp)+' ₴</span> · '+pct+'%</div>'+dh+'</div>';
+      });
+    }
+    html+='<button onclick="loadClientData()" style="display:block;width:100%;height:44px;border-radius:var(--r);font-size:14px;font-weight:600;font-family:Manrope,sans-serif;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--t2);margin:12px 0">Оновити дані</button>';
+    html+='<div style="font-size:11px;color:var(--t3);text-align:center;padding-bottom:12px">Оновлено: '+new Date().toLocaleString('uk-UA')+'</div>';
+    document.getElementById('client-content').innerHTML=html;
+  }
+  loadClientData();
+  setInterval(loadClientData,60000);
+})();
+
+// ── ІНІЦІАЛІЗАЦІЯ ──
+load();
+recalcSpent();
+
+var isClientPage=new URLSearchParams(window.location.search).get('url');
+if(!isClientPage){
+  if(!localStorage.getItem('ob_done')){
+    document.getElementById('onboarding').style.display='block';
+    document.getElementById('ob-step1').style.display='block';
+  } else {
+    document.getElementById('main-app').style.display='block';
+    fillStageSelect();
+    renderProject();
+    runCalc();
+  }
+}
